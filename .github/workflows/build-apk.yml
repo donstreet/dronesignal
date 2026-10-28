@@ -54,8 +54,18 @@ jobs:
         run: |
           sed -i 's/mp\.setDataSource(url,headers)/mp.setDataSource(url)/g' "$PROJECT_DIR/app/src/main/java/com/example/dronesignal/App.kt"
 
-      - name: Apply safe radio removal and utilities UI
-        run: python3 tools/refactor_app.py "$PROJECT_DIR"
+      - name: Apply safe radio removal and utilities UI when starting from the legacy archive
+        shell: bash
+        run: |
+          APP="$PROJECT_DIR/app/src/main/java/com/example/dronesignal/App.kt"
+          if grep -q 'data class Station(' "$APP"; then
+            python3 tools/refactor_app.py "$PROJECT_DIR"
+          else
+            test -f "$PROJECT_DIR/app/src/main/java/com/example/dronesignal/UtilitiesScreens.kt"
+            test -f "$PROJECT_DIR/app/src/main/java/com/example/dronesignal/AlertVoiceService.kt"
+            grep -q 'fun NewAppScreen' "$PROJECT_DIR/app/src/main/java/com/example/dronesignal/UtilitiesScreens.kt"
+            echo "Archive already contains the refactored app; skipping one-time refactor."
+          fi
 
       - name: Package refactored source
         run: |
