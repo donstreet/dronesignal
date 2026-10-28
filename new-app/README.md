@@ -1,15 +1,15 @@
-# DNR Signal — clean rebuild
+# Мой город — новая версия
 
-This directory is a new implementation, not a copy of the legacy ZIP archives.
+Новый Android-проект с чистого листа. Старые ZIP-архивы не используются как основа.
 
-## Delivery sequence
-1. Minimal Android Kotlin/Compose application that builds with GitHub Actions.
-2. Yandex-inspired home screen and radio station list.
-3. Background radio playback.
-4. DNR/LNR alert state, voice notifications and Telegram/backend integration with tests.
-5. Announcements feed: 9:16 thumbnail, description, external link and phone action.
-6. Signed release pipeline after debug APK verification.
+## План разработки
+1. Минимальное Kotlin/Compose-приложение и проверенная сборка APK через GitHub Actions.
+2. Главный экран в стиле Яндекса и список радиостанций.
+3. Фоновое воспроизведение радио.
+4. Оповещения ДНР/ЛНР, голосовые уведомления и интеграция с Telegram/API с тестами.
+5. Лента объявлений: миниатюра 9:16, описание, ссылка и звонок.
+6. Подписанная версия после проверки debug APK.
 
-Existing repository files, backend and production infrastructure remain untouched until the replacement is verified.
+Название приложения для пользователя: «Мой город». Старый репозиторий и сервер не меняем до проверки замены.
 
-Build target: `new-app/app/build/outputs/apk/debug/app-debug.apk`.
+APK: `new-app/app/build/outputs/apk/debug/app-debug.apk`.
