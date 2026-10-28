@@ -1,17 +1,8 @@
       - name: Fix Kotlin compilation error
         run: |
-          sed -i 's/mp\.setDataSource(url,headers)/mp.setDataSource(url)/g' "$PROJECT_DIR/app/src/main/java/com/example/dronesignal/App.kt"
-
-      - name: Extract project
+                - name: Fix Kotlin compilation error
         run: |
-          mkdir extracted
-          unzip -q dronesignal.zip -d extracted
-          PROJECT="$(find extracted -name settings.gradle.kts -printf '%h\n' -quit)"
-          if [ -z "$PROJECT" ]; then
-            PROJECT="$(find extracted -name settings.gradle -printf '%h\n' -quit)"
-          fi
-          test -n "$PROJECT" || exit 1
-          echo "PROJECT_DIR=$PROJECT" >> "$GITHUB_ENV"
+          sed -i 's/mp\.setDataSource(url,headers)/mp.setDataSource(url)/g' "$PROJECT_DIR/app/src/main/java/com/example/dronesignal/App.kt"
 
       - name: Fix Kotlin compilation error
         run: |
