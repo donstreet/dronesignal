@@ -1,4 +1,4 @@
-package com.example.dronesignal.model
+package com.example.moigorod.model
 
 /** City-scoped data contracts. These contain no UI assumptions or mock operational data. */
 data class City(val id: String, val name: String)
