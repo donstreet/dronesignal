@@ -1,17 +1,4 @@
 
-      - name: Fix Kotlin compilation error
-        run: |
-          python3 - <<'PY'
-          import os
-          from pathlib import Path
-
-          app = Path(os.environ["PROJECT_DIR"]) / "app/src/main/java/com/example/dronesignal/App.kt"
-          code = app.read_text(encoding="utf-8")
-          old = "mp.setDataSource(url,headers)"
-          assert code.count(old) == 1, "Expected MediaPlayer call not found"
-          app.write_text(code.replace(old, "mp.setDataSource(url)"), encoding="utf-8")
-          print("App.kt patched successfully")
-          PY
 name: Build APK
 
 on:
@@ -35,8 +22,6 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-    
-
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
@@ -51,6 +36,19 @@ jobs:
           fi
           test -n "$PROJECT" || exit 1
           echo "PROJECT_DIR=$PROJECT" >> "$GITHUB_ENV"
+
+      - name: Fix Kotlin compilation error
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          app = Path(os.environ["PROJECT_DIR"]) / "app/src/main/java/com/example/dronesignal/App.kt"
+          code = app.read_text(encoding="utf-8")
+          old = "mp.setDataSource(url,headers)"
+          assert code.count(old) == 1, "MediaPlayer call not found"
+          app.write_text(code.replace(old, "mp.setDataSource(url)"), encoding="utf-8")
+          print("App.kt patched successfully")
+          PY
 
       - name: Build APK
         run: |
