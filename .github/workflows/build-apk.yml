@@ -39,7 +39,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dronesignal-original-source
-          path: ${{ env.PROJECT_DIR }}/app/src/main/java/com/example/dronesignal/App.kt
+          path: extracted/**/App.kt
           if-no-files-found: error
 
       - name: Fix Kotlin compilation error
