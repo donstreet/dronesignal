@@ -17,7 +17,7 @@ on:
       - 'tools/refactor_app.py'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -76,6 +76,18 @@ jobs:
             ./gradlew :app:assembleDebug --stacktrace
           else
             gradle :app:assembleDebug --stacktrace
+          fi
+
+      - name: Update repository ZIP only after a successful APK build
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feature/utilities-refactor'
+        run: |
+          cp "$GITHUB_WORKSPACE/dronesignal-refactored-project.zip" "$GITHUB_WORKSPACE/dronesignal.zip"
+          if ! git diff --quiet -- dronesignal.zip; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add dronesignal.zip
+            git commit -m "Update dronesignal.zip with reviewed app redesign and News section"
+            git push
           fi
 
       - uses: actions/upload-artifact@v4
