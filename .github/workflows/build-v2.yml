@@ -1,0 +1,36 @@
+name: Build DNR Signal v2
+on:
+  push:
+    paths:
+      - 'DNR-Signal-v2-source.zip'
+      - '.github/workflows/build-v2.yml'
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract v2 source
+        run: |
+          test -f DNR-Signal-v2-source.zip || { echo 'Missing DNR-Signal-v2-source.zip'; exit 1; }
+          mkdir -p v2
+          unzip -q DNR-Signal-v2-source.zip -d v2
+          test -f v2/settings.gradle.kts
+          test -f v2/app/src/main/java/com/example/dronesignal/UtilitiesScreens.kt
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.5'
+      - name: Build v2 APK
+        working-directory: v2
+        run: gradle :app:assembleDebug --stacktrace
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DNR-Signal-v2
+          path: v2/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
