@@ -1,4 +1,17 @@
 
+      - name: Fix Kotlin compilation error
+        run: |
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          app = Path(os.environ["PROJECT_DIR"]) / "app/src/main/java/com/example/dronesignal/App.kt"
+          code = app.read_text(encoding="utf-8")
+          old = "mp.setDataSource(url,headers)"
+          assert code.count(old) == 1, "Expected MediaPlayer call not found"
+          app.write_text(code.replace(old, "mp.setDataSource(url)"), encoding="utf-8")
+          print("App.kt patched successfully")
+          PY
 name: Build APK
 
 on:
