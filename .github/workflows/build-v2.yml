@@ -17,6 +17,8 @@ jobs:
           unzip -q DNR-Signal-v2-source.zip -d v2
           test -f v2/settings.gradle.kts
           test -f v2/app/src/main/java/com/example/dronesignal/UtilitiesScreens.kt
+          test -f v2/app/src/main/java/com/example/dronesignal/App.kt
+          echo 'Verified DNR Signal v2 source files'
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
