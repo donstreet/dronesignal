@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -63,6 +64,11 @@ private fun UtilitySection(
     cityQuery: String,
     onCityQueryChange: (String) -> Unit
 ) {
+    val uriHandler = LocalUriHandler.current
+    val electricityDnr = "https://www.uzesk-dnr.ru/pages/new.php/?id=469"
+    val electricityLnr = "https://luganskenergo.ru/planovye-otkljucheniya/"
+    val waterDnr = "https://vodadonbassa.ru/"
+    val waterLnr = "https://www.lugvoda.ru/grafik-podachi-vody/"
     YCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(if (title == "Электричество") "⚡" else "💧", fontSize = 28.sp)
@@ -125,6 +131,25 @@ private fun UtilitySection(
             fontSize = 12.sp,
             color = UtilityMuted
         )
+        Spacer(Modifier.height(12.dp))
+        if (territory == "Все" || territory == "ДНР") {
+            YSecondary(
+                "Официальный источник ДНР",
+                { uriHandler.openUri(if (title == "Электричество") electricityDnr else waterDnr) },
+                Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(8.dp))
+        }
+        if (territory == "Все" || territory == "ЛНР") {
+            YSecondary(
+                "Официальный источник ЛНР",
+                { uriHandler.openUri(if (title == "Электричество") electricityLnr else waterLnr) },
+                Modifier.fillMaxWidth()
+            )
+        }
+        if (territory == "Другие") {
+            Text("Для других территорий официальный источник ещё не настроен.", fontSize = 12.sp, color = UtilityMuted)
+        }
     }
 
     YCard {
@@ -218,7 +243,7 @@ fun NewAppScreen() {
                     val mins = ((System.currentTimeMillis() - since) / 60_000).coerceAtLeast(0)
                     StatusHero(
                         active,
-                        if (active) "Опасность БПЛА" else "Слежение активно",
+                        if (active) "Опасность БПЛА" else "Всё спокойно",
                         if (active) "$mins мин · источник $source" else "Ожидание новых сообщений канала тревог"
                     )
                 }
