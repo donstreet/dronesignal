@@ -1,4 +1,4 @@
-
+ 
 name: Build APK
 
 on:
@@ -7,9 +7,17 @@ on:
     paths:
       - 'dronesignal.zip'
       - '.github/workflows/build-apk.yml'
+      - 'app-redesign/**'
+      - 'tools/refactor_app.py'
+  pull_request:
+    paths:
+      - 'dronesignal.zip'
+      - '.github/workflows/build-apk.yml'
+      - 'app-redesign/**'
+      - 'tools/refactor_app.py'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -35,9 +43,30 @@ jobs:
           test -n "$PROJECT"
           echo "PROJECT_DIR=$PROJECT" >> "$GITHUB_ENV"
 
+      - name: Preserve original Kotlin source for safe refactoring
+        uses: actions/upload-artifact@v4
+        with:
+          name: dronesignal-original-source
+          path: extracted/**
+          if-no-files-found: error
+
       - name: Fix Kotlin compilation error
         run: |
           sed -i 's/mp\.setDataSource(url,headers)/mp.setDataSource(url)/g' "$PROJECT_DIR/app/src/main/java/com/example/dronesignal/App.kt"
+
+      - name: Apply safe radio removal and utilities UI
+        run: python3 tools/refactor_app.py "$PROJECT_DIR"
+
+      - name: Package refactored source
+        run: |
+          cd "$PROJECT_DIR"
+          zip -qr "$GITHUB_WORKSPACE/dronesignal-refactored-project.zip" .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dronesignal-refactored-source
+          path: dronesignal-refactored-project.zip
+          if-no-files-found: error
 
       - name: Build APK
         run: |
@@ -47,6 +76,18 @@ jobs:
             ./gradlew :app:assembleDebug --stacktrace
           else
             gradle :app:assembleDebug --stacktrace
+          fi
+
+      - name: Update repository ZIP only after a successful APK build
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feature/utilities-refactor'
+        run: |
+          cp "$GITHUB_WORKSPACE/dronesignal-refactored-project.zip" "$GITHUB_WORKSPACE/dronesignal.zip"
+          if ! git diff --quiet -- dronesignal.zip; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add dronesignal.zip
+            git commit -m "Update dronesignal.zip with reviewed app redesign and News section"
+            git push
           fi
 
       - uses: actions/upload-artifact@v4
