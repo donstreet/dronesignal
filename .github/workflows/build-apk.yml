@@ -35,7 +35,7 @@ jobs:
         run: |
           mkdir extracted
           unzip -q dronesignal.zip -d extracted
-          PROJECT="$(find extracted -name settings.gradle.kts -printf '%h\\n' -quit)"
+          PROJECT="$(find extracted -name settings.gradle.kts -printf '%h\n' -quit)"
           test -n "$PROJECT"
           echo "PROJECT_DIR=$PROJECT" >> "$GITHUB_ENV"
 
@@ -43,12 +43,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dronesignal-original-source
-          path: extracted/**/App.kt
+          path: extracted/**
           if-no-files-found: error
 
       - name: Fix Kotlin compilation error
         run: |
-          sed -i 's/mp\\.setDataSource(url,headers)/mp.setDataSource(url)/g' "$PROJECT_DIR/app/src/main/java/com/example/dronesignal/App.kt"
+          sed -i 's/mp\.setDataSource(url,headers)/mp.setDataSource(url)/g' "$PROJECT_DIR/app/src/main/java/com/example/dronesignal/App.kt"
 
       - name: Build APK
         run: |
