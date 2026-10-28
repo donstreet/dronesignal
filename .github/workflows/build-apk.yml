@@ -1,6 +1,35 @@
 
 name: Build APK
+      - name: Fix Kotlin compilation error
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
 
+          p = Path("${{ env.PROJECT_DIR }}/app/src/main/java/com/example/dronesignal/App.kt")
+          s = p.read_text(encoding="utf-8")
+
+          changes = [
+              (
+                  "class StreamPlayer(private val onState: (Boolean)->Unit)",
+                  "class StreamPlayer(private val context: Context, private val onState: (Boolean)->Unit)"
+              ),
+              (
+                  "mp.setDataSource(url,headers)",
+                  "mp.setDataSource(context, android.net.Uri.parse(url), headers)"
+              ),
+              (
+                  "private val stream=StreamPlayer { alive ->",
+                  "private val stream=StreamPlayer(this) { alive ->"
+              )
+          ]
+
+          for old, new in changes:
+              assert s.count(old) == 1, f"Cannot find unique text: {old}"
+              s = s.replace(old, new)
+
+          p.write_text(s, encoding="utf-8")
+          print("App.kt fixed successfully")
+          PY
 on:
   workflow_dispatch:
   push:
