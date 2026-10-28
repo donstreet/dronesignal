@@ -24,6 +24,12 @@ import java.util.Date
 import java.util.Locale
 
 private val UtilityText = Color(0xFF1A1A1A)
+private val UtilityBg = Color(0xFFF5F5F7)
+private val UtilityRed = Color(0xFFFC3F1D)
+private val UtilityRedSoft = Color(0xFFFFE9E4)
+private val UtilityGreen = Color(0xFF22A65A)
+private val UtilityUtilityGreenSoft = Color(0xFFE7F6EE)
+private val UtilityNeutral = Color(0xFFF4F4F5)
 private val UtilityMuted = Color(0xFF8C8C8C)
 private val UtilityLine = Color(0xFFEDEDED)
 private val UtilityBlue = Color(0xFF2587D9)
@@ -125,7 +131,7 @@ private fun UtilitySection(
         Text("Как читать данные", fontWeight = FontWeight.SemiBold, color = UtilityText)
         Spacer(Modifier.height(8.dp))
         Row(verticalAlignment = Alignment.Top) {
-            Text("●", color = GreenColor, fontSize = 14.sp)
+            Text("●", color = UtilityGreen, fontSize = 14.sp)
             Spacer(Modifier.width(8.dp))
             Text("Официально опубликовано — сведения коммунальной службы или администрации.", fontSize = 12.sp, color = UtilityMuted)
         }
@@ -186,7 +192,7 @@ fun NewAppScreen() {
         }
     }
 
-    Surface(Modifier.fillMaxSize(), color = BgColor) {
+    Surface(Modifier.fillMaxSize(), color = UtilityBg) {
         LazyColumn(
             Modifier.fillMaxSize(),
             contentPadding = PaddingValues(16.dp),
@@ -252,9 +258,9 @@ fun NewAppScreen() {
                         Spacer(Modifier.height(12.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             val tagPair = when (lastKind) {
-                                "Тревога" -> YandexRed to YandexRedSoft
-                                "Отбой" -> GreenColor to GreenSoft
-                                else -> UtilityMuted to NeutralSoft
+                                "Тревога" -> UtilityRed to UtilityRedSoft
+                                "Отбой" -> UtilityGreen to UtilityGreenSoft
+                                else -> UtilityMuted to UtilityNeutral
                             }
                             Box(Modifier.clip(RoundedCornerShape(8.dp)).background(tagPair.second).padding(horizontal = 10.dp, vertical = 5.dp)) {
                                 Text(lastKind, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = tagPair.first)
@@ -266,7 +272,7 @@ fun NewAppScreen() {
                         Text(lastPost, fontSize = 14.sp, color = UtilityText)
                         if (netError) {
                             Spacer(Modifier.height(8.dp))
-                            Text("Канал недоступен · повтор при следующем опросе", fontSize = 12.sp, color = YandexRed)
+                            Text("Канал недоступен · повтор при следующем опросе", fontSize = 12.sp, color = UtilityRed)
                         }
                     }
                 }
@@ -281,7 +287,7 @@ fun NewAppScreen() {
                             Text(
                                 if (showSettings) "Свернуть" else "Развернуть",
                                 fontSize = 13.sp,
-                                color = YandexRed,
+                                color = UtilityRed,
                                 modifier = Modifier.clickableNoRipple { showSettings = !showSettings }
                             )
                         }
@@ -297,7 +303,7 @@ fun NewAppScreen() {
                                     onValueChangeFinished = { AlertState.setExpireMinutes(ctx, expire) },
                                     valueRange = 10f..180f,
                                     steps = 33,
-                                    colors = SliderDefaults.colors(thumbColor = YandexRed, activeTrackColor = YandexRed)
+                                    colors = SliderDefaults.colors(thumbColor = UtilityRed, activeTrackColor = UtilityRed)
                                 )
                                 Text("Тревога снимается, если за это время не было подтверждения", fontSize = 12.sp, color = UtilityMuted)
                                 Spacer(Modifier.height(12.dp))
