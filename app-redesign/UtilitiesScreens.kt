@@ -1,5 +1,7 @@
 package com.example.dronesignal
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -23,6 +25,9 @@ import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.net.HttpURLConnection
+import java.net.URL
+import org.json.JSONArray
 
 private val UtilityText = Color(0xFF1A1A1A)
 private val UtilityBg = Color(0xFFF5F5F7)
@@ -175,6 +180,180 @@ private fun UtilitySection(
     }
 }
 
+private data class AnnouncementItem(
+    val id: String,
+    val title: String,
+    val body: String,
+    val category: String,
+    val imageUrl: String?,
+    val actionUrl: String?,
+    val actionPhone: String?,
+    val publishedAt: String?
+)
+
+@Composable
+private fun NewsSection() {
+    val ctx = LocalContext.current
+    val uriHandler = LocalUriHandler.current
+    val prefs = remember { ctx.getSharedPreferences("news_settings", 0) }
+    var apiBase by remember { mutableStateOf(prefs.getString("api_base_url", "").orEmpty()) }
+    var draftBase by remember { mutableStateOf(apiBase) }
+    var loading by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf("") }
+    var loaded by remember { mutableStateOf(false) }
+    var announcements by remember { mutableStateOf(emptyList<AnnouncementItem>()) }
+    val scope = rememberCoroutineScope()
+
+    fun refresh() {
+        val base = apiBase.trim().trimEnd('/')
+        if (base.isBlank()) {
+            error = "Укажите публичный адрес сервера API. Адрес 127.0.0.1 на телефоне не подойдёт."
+            loaded = true
+            return
+        }
+        scope.launch {
+            loading = true
+            error = ""
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    val connection = (URL("$base/api/announcements").openConnection() as HttpURLConnection)
+                    try {
+                        connection.requestMethod = "GET"
+                        connection.connectTimeout = 8000
+                        connection.readTimeout = 10000
+                        connection.setRequestProperty("Accept", "application/json")
+                        val code = connection.responseCode
+                        val stream = if (code in 200..299) connection.inputStream else connection.errorStream
+                        val response = stream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                        if (code !in 200..299) throw IllegalStateException("Сервер вернул HTTP $code")
+                        val array = JSONArray(response)
+                        buildList {
+                            for (i in 0 until array.length()) {
+                                val item = array.optJSONObject(i) ?: continue
+                                add(
+                                    AnnouncementItem(
+                                        id = item.optString("id", i.toString()),
+                                        title = item.optString("title", "Без заголовка"),
+                                        body = item.optString("body", ""),
+                                        category = item.optString("category", "general"),
+                                        imageUrl = item.optString("image_url").takeIf { it.isNotBlank() && it != "null" },
+                                        actionUrl = item.optString("action_url").takeIf { it.isNotBlank() && it != "null" },
+                                        actionPhone = item.optString("action_phone").takeIf { it.isNotBlank() && it != "null" },
+                                        publishedAt = item.optString("published_at").takeIf { it.isNotBlank() && it != "null" }
+                                    )
+                                )
+                            }
+                        }
+                    } finally {
+                        connection.disconnect()
+                    }
+                }
+                announcements = result
+                loaded = true
+            } catch (e: Exception) {
+                error = e.message ?: "Не удалось загрузить объявления"
+                loaded = true
+            } finally {
+                loading = false
+            }
+        }
+    }
+
+    LaunchedEffect(apiBase) {
+        if (apiBase.isNotBlank()) refresh()
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        YCard {
+            Text("Новости и объявления", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = UtilityText)
+            Spacer(Modifier.height(4.dp))
+            Text("Публикации сервера: новости, вода, электричество и важные сообщения.", fontSize = 13.sp, color = UtilityMuted)
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(
+                value = draftBase,
+                onValueChange = { draftBase = it },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                label = { Text("Публичный адрес сервера API") },
+                placeholder = { Text("https://ваш-домен") }
+            )
+            Spacer(Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                YPrimary(
+                    "Сохранить адрес",
+                    {
+                        apiBase = draftBase.trim().trimEnd('/')
+                        prefs.edit().putString("api_base_url", apiBase).apply()
+                        refresh()
+                    },
+                    Modifier.weight(1f)
+                )
+                YSecondary(
+                    if (loading) "Загрузка…" else "Обновить",
+                    { if (!loading) refresh() },
+                    Modifier.weight(1f)
+                )
+            }
+            if (error.isNotBlank()) {
+                Spacer(Modifier.height(10.dp))
+                Text(error, color = UtilityRed, fontSize = 13.sp)
+            }
+        }
+        if (loading && announcements.isEmpty()) {
+            YCard { Text("Загружаю публикации…", color = UtilityMuted) }
+        } else if (loaded && announcements.isEmpty() && error.isBlank()) {
+            YCard {
+                Text("Пока нет опубликованных новостей", fontWeight = FontWeight.SemiBold, color = UtilityText)
+                Spacer(Modifier.height(4.dp))
+                Text("Новые публикации появятся здесь после публикации на сервере.", fontSize = 13.sp, color = UtilityMuted)
+            }
+        }
+        announcements.forEach { item ->
+            YCard {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        Modifier.clip(RoundedCornerShape(8.dp)).background(UtilityRedSoft).padding(horizontal = 9.dp, vertical = 5.dp)
+                    ) {
+                        Text(
+                            when (item.category.lowercase(Locale.ROOT)) {
+                                "emergency" -> "Важно"
+                                "electricity" -> "Электричество"
+                                "water" -> "Вода"
+                                "news" -> "Новости"
+                                else -> "Объявление"
+                            },
+                            color = UtilityRed,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    item.publishedAt?.let { Text(it.replace("T", " ").take(16), fontSize = 11.sp, color = UtilityMuted) }
+                }
+                Spacer(Modifier.height(10.dp))
+                Text(item.title, fontSize = 17.sp, fontWeight = FontWeight.Bold, color = UtilityText)
+                if (item.body.isNotBlank()) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(item.body, fontSize = 14.sp, color = UtilityText)
+                }
+                if (item.actionUrl != null || item.actionPhone != null) {
+                    Spacer(Modifier.height(12.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        item.actionUrl?.let { link ->
+                            YSecondary("Подробнее", { runCatching { uriHandler.openUri(link) } }, Modifier.weight(1f))
+                        }
+                        item.actionPhone?.let { phone ->
+                            YPrimary("Позвонить", {
+                                runCatching { ctx.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone"))) }
+                            }, Modifier.weight(1f))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun NewAppScreen() {
     val ctx = LocalContext.current
@@ -231,7 +410,7 @@ fun NewAppScreen() {
             }
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.fillMaxWidth()) {
-                    listOf("Безопасность", "Электричество", "Вода").forEach { tab ->
+                    listOf("Безопасность", "Электричество", "Вода", "Новости").forEach { tab ->
                         if (section == tab) YPrimary(tab, { section = tab }, Modifier.weight(1f))
                         else YSecondary(tab, { section = tab }, Modifier.weight(1f))
                     }
@@ -357,7 +536,7 @@ fun NewAppScreen() {
                         { cityQuery = it }
                     )
                 }
-            } else {
+            } else if (section == "Вода") {
                 item {
                     UtilitySection(
                         "Вода",
@@ -368,6 +547,8 @@ fun NewAppScreen() {
                         { cityQuery = it }
                     )
                 }
+            } else {
+                item { NewsSection() }
             }
             item { Spacer(Modifier.height(20.dp)) }
         }
