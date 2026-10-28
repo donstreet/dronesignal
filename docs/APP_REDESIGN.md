@@ -35,3 +35,20 @@
 
 ## Ограничения текущего этапа
 Коммунальные данные не выдумываются и не захардкоживаются как актуальные. Пока источник для территории не подключён, раздел должен сообщать, что данные недоступны или источник ещё не подключён.
+
+## Candidate sources reviewed (28 October 2026)
+
+### Electricity
+- Donetsk region: Donetskenergo / UZESK-DNR, current temporary outage schedule: https://www.uzesk-dnr.ru/pages/new.php/?id=469
+- Luhansk region: Luganskenergo planned outages: https://luganskenergo.ru/planovye-otkljucheniya/
+
+### Water
+- Donetsk region: State Enterprise «Вода Донбасса»: https://vodadonbassa.ru/
+- Luhansk region: Luganskvoda published water-supply schedules by locality: https://www.lugvoda.ru/grafik-podachi-vody/
+
+### Ingestion rules
+- Prefer the utility's own website or official government/utility publication.
+- Local channels are secondary sources and must retain the original post URL, publication time, and an explicit unverified/locally reported label until corroborated.
+- Some schedules may be published as images or PDFs rather than machine-readable tables. Do not silently guess addresses or time ranges; show a source link when reliable extraction is unavailable.
+- These are candidate sources, not proof that a live data feed has already been implemented. The first UI build intentionally shows an empty-state message until ingestion/API integration is complete.
+
