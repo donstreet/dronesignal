@@ -28,6 +28,7 @@ import java.util.Locale
 import java.net.HttpURLConnection
 import java.net.URL
 import org.json.JSONArray
+import org.json.JSONObject
 
 private val UtilityText = Color(0xFF1A1A1A)
 private val UtilityBg = Color(0xFFF5F5F7)
@@ -196,7 +197,7 @@ private fun NewsSection() {
     val ctx = LocalContext.current
     val uriHandler = LocalUriHandler.current
     val prefs = remember { ctx.getSharedPreferences("news_settings", 0) }
-    var apiBase by remember { mutableStateOf(prefs.getString("api_base_url", "").orEmpty()) }
+    var apiBase by remember { mutableStateOf(prefs.getString("api_base_url", "https://dnrsignal.duckdns.org").orEmpty().ifBlank { "https://dnrsignal.duckdns.org" }) }
     var draftBase by remember { mutableStateOf(apiBase) }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf("") }
@@ -226,7 +227,12 @@ private fun NewsSection() {
                         val stream = if (code in 200..299) connection.inputStream else connection.errorStream
                         val response = stream.bufferedReader(Charsets.UTF_8).use { it.readText() }
                         if (code !in 200..299) throw IllegalStateException("Сервер вернул HTTP $code")
-                        val array = JSONArray(response)
+                        val trimmedResponse = response.trim()
+                        val array = if (trimmedResponse.startsWith("[")) {
+                            JSONArray(trimmedResponse)
+                        } else {
+                            JSONObject(trimmedResponse).optJSONArray("announcements") ?: JSONArray()
+                        }
                         buildList {
                             for (i in 0 until array.length()) {
                                 val item = array.optJSONObject(i) ?: continue
