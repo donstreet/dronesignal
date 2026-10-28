@@ -7,6 +7,10 @@ on:
     paths:
       - 'dronesignal.zip'
       - '.github/workflows/build-apk.yml'
+  pull_request:
+    paths:
+      - 'dronesignal.zip'
+      - '.github/workflows/build-apk.yml'
 
 permissions:
   contents: read
