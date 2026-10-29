@@ -8,6 +8,11 @@ class ClassifierTests(unittest.TestCase):
         self.assertEqual(post.kind, "delivery")
         self.assertFalse(post.requires_review)
 
+    def test_common_light_wording(self):
+        post = parse_post("Макеевка: график отключения света 29.10", "https://t.me/Novosti_Makeevka/42")
+        self.assertEqual(post.category, "electricity")
+        self.assertFalse(post.requires_review)
+
     def test_missing_city_needs_review(self):
         post = parse_post("График отключения электроэнергии 29.10", "https://max.ru/example")
         self.assertTrue(post.requires_review)
