@@ -28,6 +28,25 @@ class ImportTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 import_drafts(Path(tmp) / "db.sqlite", p)
 
+    def test_reject_timestamp_without_timezone(self):
+        p = payload()
+        p["posts"][0]["published_at"] = "2026-10-29T09:00:00"
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(ValueError):
+                import_drafts(Path(tmp) / "db.sqlite", p)
+
+    def test_existing_moderated_post_is_not_overwritten(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "db.sqlite"
+            import_drafts(db, payload())
+            with sqlite3.connect(db) as conn:
+                conn.execute("UPDATE review_posts SET moderation_status='approved' WHERE post_id='42'")
+            changed = payload()
+            changed["posts"][0]["text"] = "Modified text"
+            import_drafts(db, changed)
+            with sqlite3.connect(db) as conn:
+                self.assertEqual(conn.execute("SELECT body FROM review_posts").fetchone()[0], "График воды")
+
     def test_reject_non_draft(self):
         p = payload()
         p["publication_status"] = "published"
