@@ -14,7 +14,10 @@
         "Макеевка"
       ],
       "enabled": false,
-      "integrationStatus": "pending_verification"
+      "integrationStatus": "pending_verification",
+      "userApproved": true,
+      "scheduleAuthority": "primary_user_designated",
+      "officialAffiliationVerified": false
     },
     {
       "id": "fuel_dnr",
@@ -25,7 +28,10 @@
       ],
       "coverageHints": [],
       "enabled": false,
-      "integrationStatus": "pending_verification"
+      "integrationStatus": "pending_verification",
+      "userApproved": true,
+      "scheduleAuthority": "not_applicable",
+      "officialAffiliationVerified": false
     },
     {
       "id": "benz_dnr",
@@ -36,7 +42,10 @@
       ],
       "coverageHints": [],
       "enabled": false,
-      "integrationStatus": "pending_verification"
+      "integrationStatus": "pending_verification",
+      "userApproved": true,
+      "scheduleAuthority": "not_applicable",
+      "officialAffiliationVerified": false
     },
     {
       "id": "electricity_max",
@@ -50,7 +59,10 @@
         "Макеевка"
       ],
       "enabled": false,
-      "integrationStatus": "pending_verification"
+      "integrationStatus": "pending_verification",
+      "userApproved": true,
+      "scheduleAuthority": "primary_user_designated",
+      "officialAffiliationVerified": false
     },
     {
       "id": "voda_dnr",
@@ -64,7 +76,10 @@
         "Макеевка"
       ],
       "enabled": false,
-      "integrationStatus": "pending_verification"
+      "integrationStatus": "pending_verification",
+      "userApproved": true,
+      "scheduleAuthority": "primary_user_designated",
+      "officialAffiliationVerified": false
     },
     {
       "id": "vesti_max",
@@ -75,7 +90,10 @@
       ],
       "coverageHints": [],
       "enabled": false,
-      "integrationStatus": "pending_verification"
+      "integrationStatus": "pending_verification",
+      "userApproved": true,
+      "scheduleAuthority": "not_applicable",
+      "officialAffiliationVerified": false
     }
   ],
   "classificationExamples": [
@@ -85,5 +103,19 @@
       "role": "user_supplied_trigger_example",
       "behavior": "review_before_automation"
     }
-  ]
+  ],
+  "schedulePolicy": {
+    "water": [
+      "voda_dnr",
+      "makeevka_news"
+    ],
+    "electricity": [
+      "electricity_max",
+      "makeevka_news"
+    ],
+    "displayLabel": "График из утверждённого источника",
+    "requireOriginalPostLink": true,
+    "requirePublicationDate": true,
+    "doNotInferCurrentValidity": true
+  }
 }
