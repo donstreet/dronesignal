@@ -122,7 +122,6 @@ class MainActivity : Activity() {
                     setPadding(dp(10), dp(5), dp(8), dp(5))
                 }
                 row.addView(tile, LinearLayout.LayoutParams(0, dp(82), 1f).apply {
-                    if (item !== pair.first()) {}
                     rightMargin = dp(6)
                     bottomMargin = dp(6)
                 })
