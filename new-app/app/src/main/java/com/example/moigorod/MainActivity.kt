@@ -16,6 +16,7 @@ class MainActivity : Activity() {
     private val muted = Color.rgb(180, 183, 190)
     private fun dp(value: Int) = (value * resources.displayMetrics.density + 0.5f).toInt()
     private lateinit var content: LinearLayout
+    private lateinit var root: LinearLayout
     private var city = "Выберите город"
     private var currentPage = "home"
 
@@ -55,14 +56,22 @@ class MainActivity : Activity() {
         }
 
     private fun shell(title: String) {
-        val scroll = ScrollView(this).apply { setBackgroundColor(bg) }
+        root = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(bg)
+        }
+        val scroll = ScrollView(this).apply {
+            setBackgroundColor(bg)
+            isFillViewport = true
+        }
         content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(20), dp(20), dp(10))
+            setPadding(dp(20), dp(12), dp(20), dp(8))
         }
         scroll.addView(content)
-        setContentView(scroll)
-        content.addView(text(title, 29f, Color.WHITE, true))
+        root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+        setContentView(root)
+        if (title.isNotBlank()) content.addView(text(title, 29f, Color.WHITE, true))
     }
 
     private fun section(title: String, message: String) {
@@ -156,7 +165,7 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER_VERTICAL
         }
         val cityBadge = TextView(this).apply {
-            text = "▥"
+            text = "🏙"
             textSize = 27f
             gravity = Gravity.CENTER
             setTextColor(Color.WHITE)
@@ -406,7 +415,10 @@ class MainActivity : Activity() {
             }
             row.addView(col, LinearLayout.LayoutParams(0, -2, 1f))
         }
-        content.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(4) })
+        root.addView(row, LinearLayout.LayoutParams(-1, dp(58)).apply {
+            topMargin = dp(2)
+            bottomMargin = dp(2)
+        })
     }
 
     private fun chooseCity() {
@@ -546,9 +558,9 @@ class MainActivity : Activity() {
         val nearbyScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
         val nearbyRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         listOf(
-            Triple("✚", "Аптеки", "Справочник аптек"),
+            Triple("⚕", "Аптеки", "Справочник аптек"),
             Triple("🚕", "Такси", "Контакты такси"),
-            Triple("➤", "Полезные адреса", "Городские службы")
+            Triple("⌖", "Полезные адреса", "Городские службы")
         ).forEach { item ->
             nearbyRow.addView(iconTile(item.first, item.second, item.third) {
                 showPage(item.second, "Сведения появятся после подключения справочника.")
