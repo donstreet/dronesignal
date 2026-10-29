@@ -175,9 +175,42 @@ class MainActivity : Activity() {
         })
         brand.addView(brandWords, LinearLayout.LayoutParams(0, -2, 1f))
         row.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
-        row.addView(button("♧") {
-            showPage("Уведомления", "Здесь будут отображаться уведомления приложения.")
-        }, LinearLayout.LayoutParams(dp(48), dp(48)))
+        val bell = object : View(this) {
+            private val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.WHITE
+                style = android.graphics.Paint.Style.STROKE
+                strokeWidth = dp(2).toFloat()
+                strokeCap = android.graphics.Paint.Cap.ROUND
+                strokeJoin = android.graphics.Paint.Join.ROUND
+            }
+            override fun onDraw(canvas: android.graphics.Canvas) {
+                super.onDraw(canvas)
+                val cx = width / 2f
+                val cy = height / 2f
+                val scale = dp(1).toFloat()
+                val path = android.graphics.Path().apply {
+                    moveTo(cx - 10 * scale, cy + 5 * scale)
+                    quadTo(cx - 7 * scale, cy + 1 * scale, cx - 7 * scale, cy - 5 * scale)
+                    quadTo(cx - 7 * scale, cy - 13 * scale, cx, cy - 13 * scale)
+                    quadTo(cx + 7 * scale, cy - 13 * scale, cx + 7 * scale, cy - 5 * scale)
+                    quadTo(cx + 7 * scale, cy + 1 * scale, cx + 10 * scale, cy + 5 * scale)
+                    close()
+                }
+                canvas.drawPath(path, paint)
+                canvas.drawLine(cx - 11 * scale, cy + 6 * scale, cx + 11 * scale, cy + 6 * scale, paint)
+                canvas.drawArc(cx - 3 * scale, cy + 7 * scale, cx + 3 * scale, cy + 12 * scale, 0f, 180f, false, paint)
+            }
+        }.apply {
+            background = android.graphics.drawable.GradientDrawable().apply {
+                cornerRadius = dp(12).toFloat()
+                setColor(surface)
+            }
+            contentDescription = "Уведомления"
+            setOnClickListener { showPage("Уведомления", "Здесь будут отображаться уведомления приложения.") }
+        }
+        row.addView(bell, LinearLayout.LayoutParams(dp(44), dp(44)).apply {
+            rightMargin = dp(4)
+        })
         row.addView(button("⚙") {
             showPage("Настройки", "Настройки приложения.")
         }, LinearLayout.LayoutParams(dp(48), dp(48)))
