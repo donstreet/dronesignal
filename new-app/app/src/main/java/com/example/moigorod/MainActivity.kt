@@ -546,9 +546,9 @@ class MainActivity : Activity() {
         val nearbyScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
         val nearbyRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         listOf(
-            Triple("💊", "Аптеки", "Справочник аптек"),
+            Triple("✚", "Аптеки", "Справочник аптек"),
             Triple("🚕", "Такси", "Контакты такси"),
-            Triple("⌖", "Полезные адреса", "Городские службы")
+            Triple("➤", "Полезные адреса", "Городские службы")
         ).forEach { item ->
             nearbyRow.addView(iconTile(item.first, item.second, item.third) {
                 showPage(item.second, "Сведения появятся после подключения справочника.")
