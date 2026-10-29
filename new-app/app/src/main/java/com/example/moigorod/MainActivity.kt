@@ -691,10 +691,12 @@ class MainActivity : Activity() {
         listOf(
             Triple("⚕", "Аптеки", "Справочник аптек"),
             Triple("🚕", "Такси", "Контакты такси"),
-            Triple("⌖", "Полезные адреса", "Городские службы")
+            Triple("⌖", "Полезные адреса", "Городские службы"),
+            Triple("chat", "Каналы", "Администрации")
         ).forEach { item ->
             nearbyRow.addView(iconTile(item.first, item.second, "") {
-                showPage(item.second, "Сведения появятся после подключения справочника.")
+                if (item.second == "Каналы") showOfficialChannels()
+                else showPage(item.second, "Сведения появятся после подключения справочника.")
             }, LinearLayout.LayoutParams(dp(90), dp(72)).apply { rightMargin = dp(5) })
         }
         nearbyScroll.addView(nearbyRow)
@@ -910,6 +912,108 @@ class MainActivity : Activity() {
         card("Актуальность", "Автоматическая загрузка публикаций пока не подключена. Читать новости можно по ссылке на источник.")
         content.addView(text("После подключения источника здесь будут заголовок, краткий текст, дата публикации и ссылка на оригинал.", 14f, muted))
         content.addView(button("Обновить ленту") { showNews() })
+        content.addView(button("← На главную") { showHome() })
+    }
+
+    private fun showOfficialChannels() {
+        currentPage = "channels"
+        shell("Официальные каналы")
+        content.addView(text("Город: $city", 17f, Color.WHITE, true))
+        content.addView(text("Ссылки ведут на опубликованные каналы администраций и руководителей. Открытие происходит в Telegram или MAX. Наличие ссылки не означает автоматическую загрузку публикаций в приложение.", 14f, muted))
+
+        data class OfficialLink(val organization: String, val telegram: String? = null, val max: String? = null)
+        val links = when (city) {
+            "Донецк" -> listOf(
+                OfficialLink("Администрация города", "https://t.me/gorodDonetsk"),
+                OfficialLink("Глава города", "https://t.me/kulemzin_donetsk", "https://max.ru/kulemzin_donetsk")
+            )
+            "Макеевка" -> listOf(OfficialLink("Администрация города", "https://t.me/Novosti_Makeevka", "https://max.ru/makeevka_ru"))
+            "Дебальцево" -> listOf(
+                OfficialLink("Администрация города", "https://t.me/admDebaltsevo"),
+                OfficialLink("Глава города", "https://t.me/glavadebaltsevo")
+            )
+            "Докучаевск" -> listOf(
+                OfficialLink("Администрация города", "https://t.me/Dokuchaevsk_admin", "https://max.ru/id9306004432_gos"),
+                OfficialLink("Глава города", "https://t.me/dokuchaevsk", "https://max.ru/id9306004432_gos2")
+            )
+            "Горловка" -> listOf(OfficialLink("Администрация города", "https://t.me/Gorlowka_now", "https://max.ru/gorlowka_now"))
+            "Енакиево" -> listOf(
+                OfficialLink("Администрация города", "https://t.me/Enakievo_official", "https://max.ru/enakievo_official"),
+                OfficialLink("Глава города", "https://t.me/IgorMartynov_enk")
+            )
+            "Иловайск" -> listOf(
+                OfficialLink("Администрация городского округа", "https://t.me/ilovaisk_onlain", "https://max.ru/id9304022980_gos"),
+                OfficialLink("Руководитель городского округа", "https://t.me/dz_ilov_gorokrug")
+            )
+            "Мариуполь" -> listOf(
+                OfficialLink("Администрация города", "https://t.me/nmrpl"),
+                OfficialLink("Глава города", "https://t.me/morgun_ov")
+            )
+            "Снежное" -> listOf(
+                OfficialLink("Администрация города", "https://t.me/Snijne", "https://max.ru/id9304022972_gos"),
+                OfficialLink("Глава города", "https://t.me/Ermakov_ESV")
+            )
+            "Торез (Чистяково)" -> listOf(OfficialLink("Администрация города", "https://t.me/torez_admin", "https://max.ru/id9304022958_gos"))
+            "Харцызск" -> listOf(OfficialLink("Администрация города", "https://t.me/khartsyzsk_press_office"))
+            "Амвросиевка" -> listOf(
+                OfficialLink("Администрация округа", "https://t.me/amvr_admin", "https://max.ru/id9304022919_gos"),
+                OfficialLink("Глава администрации", "https://t.me/Lyzov_amvrosievka", "https://max.ru/join/HIkfVJh2KB7pFxakfgjwwaGirL1L-t9kZISWlNE96XE")
+            )
+            "Волноваха" -> listOf(
+                OfficialLink("Администрация округа", "https://t.me/volnovahadnr", "https://max.ru/id9306004440_gos"),
+                OfficialLink("Глава администрации", "https://t.me/kazinchenko", "https://max.ru/id9306004440_gos2")
+            )
+            "Шахтёрск" -> listOf(
+                OfficialLink("Администрация округа", "https://t.me/AGShahtersk", "https://max.ru/mo_shahtersk"),
+                OfficialLink("Глава администрации", "https://t.me/shatov_av_agsh")
+            )
+            "Новоазовск" -> listOf(
+                OfficialLink("Администрация округа", "https://t.me/novoazovsk_adm", "https://max.ru/id9305011204_gos"),
+                OfficialLink("Канал руководителя округа", "https://t.me/novoazovskiy_region")
+            )
+            "Тельманово" -> listOf(OfficialLink("Администрация округа", "https://t.me/adm_telmanovskogo_rajona", "https://max.ru/id9305011162_gos"))
+            "Старобешево" -> listOf(OfficialLink("Администрация округа", "https://t.me/starobeshevo1923"))
+            "Володарское" -> listOf(OfficialLink("Администрация округа", "https://t.me/volodinfo"))
+            "Мангуш" -> listOf(OfficialLink("Администрация округа", "https://t.me/Mangush_mo"))
+            "Ждановка" -> listOf(OfficialLink("Администрация города", "https://t.me/adm_zhdanovka"))
+            "Кировское (Крестовка)" -> listOf(OfficialLink("Администрация города", "https://t.me/gorod_kirovskoe"))
+            "Ясиноватая" -> listOf(OfficialLink("Администрация округа", "https://t.me/gromko_yas"))
+            "Красный Лиман" -> listOf(OfficialLink("Администрация округа", "https://t.me/kr_liman_admin"))
+            else -> emptyList()
+        }
+
+        if (links.isEmpty()) {
+            card("Проверенные ссылки пока не добавлены", "Для выбранного населённого пункта мы ещё не подтвердили официальные каналы. Не подставляем случайные ссылки.")
+        } else {
+            links.forEach { link ->
+                val panel = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(dp(14), dp(8), dp(14), dp(10))
+                    background = outlinedPanel()
+                }
+                panel.addView(text(link.organization, 16f, Color.WHITE, true))
+                val actions = LinearLayout(this).apply {
+                    orientation = LinearLayout.HORIZONTAL
+                    gravity = Gravity.CENTER_VERTICAL
+                }
+                link.telegram?.let { url ->
+                    actions.addView(button("Открыть Telegram") {
+                        startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)))
+                    }, LinearLayout.LayoutParams(0, -2, 1f).apply { rightMargin = dp(6) })
+                }
+                link.max?.let { url ->
+                    actions.addView(button("Открыть MAX") {
+                        startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)))
+                    }, LinearLayout.LayoutParams(0, -2, 1f))
+                }
+                panel.addView(actions)
+                if (link.max == null) panel.addView(text("Подтверждённая ссылка MAX пока не добавлена.", 12f, muted))
+                content.addView(panel, LinearLayout.LayoutParams(-1, -2).apply {
+                    topMargin = dp(6)
+                    bottomMargin = dp(4)
+                })
+            }
+        }
         content.addView(button("← На главную") { showHome() })
     }
 
