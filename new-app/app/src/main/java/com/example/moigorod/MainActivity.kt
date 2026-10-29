@@ -102,6 +102,117 @@ class MainActivity : Activity() {
         })
     }
 
+
+    /** Reference-style illustrated badges instead of platform emoji glyphs. */
+    private fun iconGraphic(key: String, sizeDp: Int): View = object : View(this) {
+        private val p = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
+        override fun onDraw(canvas: android.graphics.Canvas) {
+            super.onDraw(canvas)
+            val scale = resources.displayMetrics.density
+            val w = width.toFloat()
+            val h = height.toFloat()
+            val cx = w / 2f
+            val cy = h / 2f
+            val r = minOf(w, h) * 0.43f
+            val bgColor = when (key) {
+                "⚡" -> Color.rgb(166, 112, 28)
+                "💧" -> Color.rgb(23, 111, 165)
+                "⛽" -> Color.rgb(41, 125, 48)
+                "▤" -> Color.rgb(112, 58, 165)
+                "⚕" -> Color.rgb(20, 157, 105)
+                "🚕" -> Color.rgb(205, 139, 20)
+                "⌖" -> Color.rgb(26, 116, 211)
+                "chat" -> Color.rgb(244, 42, 76)
+                "city" -> Color.rgb(240, 24, 47)
+                else -> surface
+            }
+            p.style = android.graphics.Paint.Style.FILL
+            p.color = bgColor
+            if (key == "city") {
+                val pin = android.graphics.Path().apply {
+                    moveTo(cx, h * 0.96f)
+                    cubicTo(w * 0.40f, h * 0.70f, w * 0.08f, h * 0.53f, w * 0.08f, h * 0.34f)
+                    cubicTo(w * 0.08f, h * 0.10f, w * 0.30f, h * 0.02f, cx, h * 0.02f)
+                    cubicTo(w * 0.70f, h * 0.02f, w * 0.92f, h * 0.10f, w * 0.92f, h * 0.34f)
+                    cubicTo(w * 0.92f, h * 0.53f, w * 0.60f, h * 0.70f, cx, h * 0.96f)
+                    close()
+                }
+                canvas.drawPath(pin, p)
+                p.color = Color.WHITE
+                canvas.drawRect(w*.25f,h*.34f,w*.38f,h*.60f,p)
+                canvas.drawRect(w*.42f,h*.25f,w*.57f,h*.60f,p)
+                canvas.drawRect(w*.61f,h*.38f,w*.74f,h*.60f,p)
+                p.color = bgColor
+                canvas.drawRect(w*.29f,h*.40f,w*.33f,h*.45f,p)
+                canvas.drawRect(w*.46f,h*.32f,w*.50f,h*.37f,p)
+                canvas.drawRect(w*.65f,h*.43f,w*.69f,h*.48f,p)
+                return
+            }
+            canvas.drawCircle(cx, cy, r, p)
+            p.color = Color.WHITE
+            p.style = android.graphics.Paint.Style.STROKE
+            p.strokeWidth = maxOf(1.6f * scale, sizeDp * scale * 0.055f)
+            p.strokeCap = android.graphics.Paint.Cap.ROUND
+            p.strokeJoin = android.graphics.Paint.Join.ROUND
+            when (key) {
+                "⚡" -> {
+                    p.style = android.graphics.Paint.Style.FILL
+                    val path = android.graphics.Path().apply {
+                        moveTo(cx+w*.02f,cy-r*.65f); lineTo(cx-r*.38f,cy+w*.02f)
+                        lineTo(cx-r*.02f,cy+w*.02f); lineTo(cx-r*.15f,cy+r*.60f)
+                        lineTo(cx+r*.40f,cy-r*.12f); lineTo(cx+r*.06f,cy-r*.12f); close()
+                    }
+                    canvas.drawPath(path,p)
+                }
+                "💧" -> {
+                    val path = android.graphics.Path().apply {
+                        moveTo(cx,cy-r*.72f); cubicTo(cx-r*.18f,cy-r*.35f,cx-r*.62f,cy+r*.05f,cx-r*.50f,cy+r*.35f)
+                        cubicTo(cx-r*.35f,cy+r*.78f,cx+r*.35f,cy+r*.78f,cx+r*.50f,cy+r*.35f)
+                        cubicTo(cx+r*.62f,cy+r*.05f,cx+r*.18f,cy-r*.35f,cx,cy-r*.72f); close()
+                    }
+                    p.style = android.graphics.Paint.Style.FILL; canvas.drawPath(path,p)
+                }
+                "⛽" -> {
+                    canvas.drawRoundRect(cx-r*.42f,cy-r*.42f,cx+r*.20f,cy+r*.48f,r*.08f,r*.08f,p)
+                    canvas.drawRect(cx-r*.30f,cy-r*.30f,cx+r*.08f,cy-r*.02f,p)
+                    canvas.drawLine(cx+r*.20f,cy-r*.28f,cx+r*.43f,cy-r*.10f,p)
+                    canvas.drawLine(cx+r*.43f,cy-r*.10f,cx+r*.43f,cy+r*.22f,p)
+                }
+                "▤" -> {
+                    for (i in 0..2) canvas.drawLine(cx-r*.48f,cy-r*.35f+i*r*.35f,cx+r*.48f,cy-r*.35f+i*r*.35f,p)
+                    canvas.drawRect(cx-r*.48f,cy-r*.48f,cx+r*.48f,cy+r*.48f,p)
+                }
+                "⚕" -> {
+                    p.strokeWidth = r*.30f
+                    canvas.drawLine(cx-r*.42f,cy,cx+r*.42f,cy,p)
+                    canvas.drawLine(cx,cy-r*.42f,cx,cy+r*.42f,p)
+                }
+                "🚕" -> {
+                    canvas.drawRoundRect(cx-r*.52f,cy-r*.05f,cx+r*.52f,cy+r*.35f,r*.12f,r*.12f,p)
+                    canvas.drawLine(cx-r*.30f,cy-r*.05f,cx-r*.12f,cy-r*.32f,p)
+                    canvas.drawLine(cx-r*.12f,cy-r*.32f,cx+r*.24f,cy-r*.32f,p)
+                    canvas.drawCircle(cx-r*.28f,cy+r*.38f,r*.10f,p); canvas.drawCircle(cx+r*.30f,cy+r*.38f,r*.10f,p)
+                }
+                "⌖" -> {
+                    canvas.drawCircle(cx,cy,r*.43f,p)
+                    canvas.drawCircle(cx,cy,r*.12f,p)
+                    canvas.drawLine(cx-r*.72f,cy,cx+r*.72f,cy,p)
+                    canvas.drawLine(cx,cy-r*.72f,cx,cy+r*.72f,p)
+                }
+                else -> {
+                    p.style = android.graphics.Paint.Style.FILL
+                    p.textAlign = android.graphics.Paint.Align.CENTER
+                    p.textSize = r*1.15f
+                    canvas.drawText(if (key == "chat") "•••" else key, cx, cy+r*.36f, p)
+                }
+            }
+        }
+    }.apply { contentDescription = when(key) {
+        "⚡" -> "Свет"; "💧" -> "Вода"; "⛽" -> "Топливо"; "▤" -> "Новости"
+        "⚕" -> "Аптеки"; "🚕" -> "Такси"; "⌖" -> "Полезные адреса"; "city" -> "Мой город"; "chat" -> "Онлайн-чат"
+        else -> key
+    } }
+
     private fun iconTile(icon: String, label: String, description: String, action: () -> Unit): LinearLayout =
         LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -118,7 +229,7 @@ class MainActivity : Activity() {
                     includeFontPadding = false
                     gravity = Gravity.CENTER_VERTICAL
                 }
-            addView(cleanLine(icon, 25f, Color.WHITE, true), LinearLayout.LayoutParams(-1, dp(32)))
+            addView(iconGraphic(icon, 32), LinearLayout.LayoutParams(dp(34), dp(34)).apply { bottomMargin = dp(3) })
             addView(cleanLine(label, 14f, Color.WHITE, true), LinearLayout.LayoutParams(-1, dp(24)))
             if (description.isNotBlank()) {
                 addView(cleanLine(description, 11f, muted), LinearLayout.LayoutParams(-1, dp(20)))
@@ -176,7 +287,7 @@ class MainActivity : Activity() {
                 setStroke(dp(2), accent)
             }
         }
-        brand.addView(cityBadge, LinearLayout.LayoutParams(dp(52), dp(52)).apply {
+        brand.addView(iconGraphic("city", 44), LinearLayout.LayoutParams(dp(52), dp(52)).apply {
             rightMargin = dp(10)
         })
         val brandWords = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
@@ -529,7 +640,7 @@ class MainActivity : Activity() {
             setPadding(dp(14), dp(2), dp(10), dp(2))
         }
         val cityIcon = TextView(this).apply {
-            text = "▥"
+            text = ""
             textSize = 22f
             gravity = Gravity.CENTER
             setTextColor(Color.WHITE)
@@ -541,7 +652,7 @@ class MainActivity : Activity() {
                 setStroke(dp(1), accent)
             }
         }
-        cityRow.addView(cityIcon, LinearLayout.LayoutParams(dp(38), dp(38)).apply {
+        cityRow.addView(iconGraphic("city", 32), LinearLayout.LayoutParams(dp(38), dp(38)).apply {
             rightMargin = dp(10)
         })
         cityRow.addView(text(city, 16f, Color.WHITE, true), LinearLayout.LayoutParams(0, -2, 1f))
