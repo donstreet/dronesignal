@@ -70,49 +70,170 @@ class MainActivity : Activity() {
         content.addView(text(message, 15f, muted))
     }
 
+    private fun outlinedPanel(): android.graphics.drawable.GradientDrawable =
+        android.graphics.drawable.GradientDrawable().apply {
+            setColor(surface)
+            cornerRadius = dp(18).toFloat()
+            setStroke(dp(1), accent)
+        }
+
     private fun card(title: String, description: String, action: (() -> Unit)? = null) {
         val panel = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16), dp(12), dp(16), dp(12))
-            background = android.graphics.drawable.GradientDrawable().apply {
-                setColor(surface)
-                cornerRadius = dp(16).toFloat()
-            }
+            background = outlinedPanel()
             isClickable = action != null
             if (action != null) setOnClickListener { action() }
         }
         panel.addView(text(title, 19f, Color.WHITE, true))
         panel.addView(text(description, 14f, muted))
         content.addView(panel, LinearLayout.LayoutParams(-1, -2).apply {
-            topMargin = dp(10)
-            bottomMargin = dp(6)
+            topMargin = dp(8)
+            bottomMargin = dp(5)
         })
     }
 
-    private fun navigationTile(label: String, description: String, action: () -> Unit): LinearLayout =
+    private fun iconTile(icon: String, label: String, description: String, action: () -> Unit): LinearLayout =
         LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(14), dp(12), dp(10), dp(12))
-            background = android.graphics.drawable.GradientDrawable().apply {
-                setColor(surface)
-                cornerRadius = dp(14).toFloat()
-            }
-            addView(text(label, 18f, Color.WHITE, true))
-            addView(text(description, 13f, muted))
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(10), dp(12), dp(8), dp(12))
+            background = outlinedPanel()
+            addView(text(icon, 25f, Color.WHITE, true))
+            addView(text(label, 14f, Color.WHITE, true))
+            addView(text(description, 11f, muted))
             setOnClickListener { action() }
             isClickable = true
         }
 
-    private fun navigationRow(
-        first: Triple<String, String, () -> Unit>,
-        second: Triple<String, String, () -> Unit>
-    ) {
+    private fun featureStrip() {
+        val scroller = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        row.addView(navigationTile(first.first, first.second, first.third),
-            LinearLayout.LayoutParams(0, -2, 1f).apply { rightMargin = dp(5) })
-        row.addView(navigationTile(second.first, second.second, second.third),
-            LinearLayout.LayoutParams(0, -2, 1f).apply { leftMargin = dp(5) })
-        content.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
+        val items = listOf(
+            Triple("⚡", "Свет", "Отключения") to { showPage("Свет", "Данные пока не загружены.") },
+            Triple("💧", "Вода", "Водоснабжение") to { showPage("Вода", "Данные пока не загружены.") },
+            Triple("⛽", "Топливо", "Наличие") to { showPage("Топливо", "Данные пока не загружены.") },
+            Triple("▤", "Новости", "Городская лента") to { showPage("Новости", "Новости пока не загружены.") }
+        )
+        items.forEach { item ->
+            row.addView(iconTile(item.first.first, item.first.second, item.first.third, item.second),
+                LinearLayout.LayoutParams(dp(112), dp(112)).apply { rightMargin = dp(8) })
+        }
+        scroller.addView(row)
+        content.addView(scroller, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(6) })
+    }
+
+    private fun header() {
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val brand = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        brand.addView(text("📍 МОЙ ГОРОД", 24f, Color.WHITE, true))
+        brand.addView(text("Безопасность. Информация. Помощь.", 12f, muted))
+        row.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
+        row.addView(button("🔔") {
+            showPage("Уведомления", "Здесь будут отображаться уведомления приложения.")
+        }, LinearLayout.LayoutParams(dp(48), dp(48)))
+        row.addView(button("⚙") {
+            showPage("Настройки", "Настройки приложения.")
+        }, LinearLayout.LayoutParams(dp(48), dp(48)))
+        content.addView(row)
+    }
+
+    private fun promoBanner() {
+        val panel = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(16), dp(14), dp(12), dp(14))
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(Color.rgb(45, 18, 20), surface)
+            ).apply {
+                cornerRadius = dp(20).toFloat()
+                setStroke(dp(1), accent)
+            }
+        }
+        val words = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        words.addView(text("БУДЬ В КУРСЕ", 13f, Color.WHITE, true))
+        words.addView(text("ВАЖНЫХ СОБЫТИЙ", 20f, accent, true))
+        words.addView(text("Подпишись на канал и получай новости", 12f, muted))
+        words.addView(button("➤ Перейти в Telegram") {
+            showPage("Реклама и объявления", "Ссылка на рекламный канал появится после настройки.")
+        })
+        panel.addView(words, LinearLayout.LayoutParams(0, -2, 1f))
+        panel.addView(text("📱", 42f, Color.WHITE, true))
+        content.addView(panel, LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(14)
+            bottomMargin = dp(10)
+        })
+    }
+
+    private fun sosPanel() {
+        val panel = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(16), dp(14), dp(16), dp(14))
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(Color.rgb(200, 36, 28), accent)
+            ).apply { cornerRadius = dp(18).toFloat() }
+            setOnClickListener { showSos() }
+            isClickable = true
+        }
+        panel.addView(text("🆘", 30f, Color.WHITE, true))
+        val words = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(12), 0, 0, 0) }
+        words.addView(text("SOS 112", 23f, Color.WHITE, true))
+        words.addView(text("Экстренный вызов", 14f, Color.WHITE))
+        panel.addView(words, LinearLayout.LayoutParams(0, -2, 1f))
+        panel.addView(text("›", 30f, Color.WHITE, true))
+        content.addView(panel, LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(8); bottomMargin = dp(10)
+        })
+    }
+
+    private fun dangerPanel() {
+        val panel = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(14), dp(10), dp(14), dp(10))
+            background = outlinedPanel()
+            setOnClickListener { showPage("Я в опасности", "Можно будет настроить отправку SMS и геолокации после подключения соответствующих разрешений.") }
+            isClickable = true
+        }
+        panel.addView(text("🛡️", 27f, accent, true))
+        val words = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(12), 0, 0, 0) }
+        words.addView(text("Я в опасности", 18f, Color.WHITE, true))
+        words.addView(text("Отправить SMS и геолокацию", 13f, muted))
+        panel.addView(words)
+        content.addView(panel, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
+    }
+
+    private fun bottomNav() {
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            setPadding(0, dp(8), 0, dp(4))
+        }
+        val items = listOf(
+            Triple("⌂", "Главная", { showHome() }),
+            Triple("⌖", "Карта", { showPage("Карта", "Карта пока не подключена.") }),
+            Triple("⚠", "Опасности", { showPage("Опасности", "Нет подтверждённых актуальных данных. Это не означает отсутствие опасности.") }),
+            Triple("⋯", "Ещё", { showPage("Ещё", "Дополнительные сервисы.") })
+        )
+        items.forEachIndexed { index, item ->
+            val col = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER
+                setPadding(dp(2), dp(5), dp(2), dp(5))
+                addView(text(item.first, 23f, if (index == 0) accent else muted, true))
+                addView(text(item.second, 10f, if (index == 0) accent else muted))
+                setOnClickListener { item.third() }
+                isClickable = true
+            }
+            row.addView(col, LinearLayout.LayoutParams(0, -2, 1f))
+        }
+        content.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
     }
 
     private fun chooseCity() {
@@ -212,46 +333,42 @@ class MainActivity : Activity() {
 
     private fun showHome() {
         currentPage = "home"
-        shell("МОЙ ГОРОД")
-        content.addView(button("📍 $city  ▾") { chooseCity() })
-        card("Рекламные объявления", "Баннеры партнёров и городские объявления. Данные появятся после подключения сервера.")
-        card("SOS 112", "Экстренная помощь · звонок или сообщение близким") { showSos() }
-        content.addView(text("Городские разделы", 21f, Color.WHITE, true))
-        navigationRow(
-            Triple("⚡ Свет", "Отключения", { showPage("Свет", "Данные пока не загружены.") }),
-            Triple("💧 Вода", "Водоснабжение", { showPage("Вода", "Данные пока не загружены.") })
-        )
-        navigationRow(
-            Triple("⛽ Топливо", "Наличие", { showPage("Топливо", "Данные пока не загружены.") }),
-            Triple("▤ Новости", "Городская лента", { showPage("Новости", "Новости пока не загружены.") })
-        )
-        card("Онлайн-чат", "Общение жителей города") {
-            showCommunityChat()
+        shell("")
+        content.removeAllViews()
+        header()
+        promoBanner()
+        val cityRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            background = outlinedPanel()
+            setPadding(dp(14), dp(2), dp(10), dp(2))
         }
-        content.addView(text("Полезное рядом  →", 21f, Color.WHITE, true))
+        cityRow.addView(text("📍  $city", 16f, Color.WHITE, true), LinearLayout.LayoutParams(0, -2, 1f))
+        cityRow.addView(button("Изменить ▾") { chooseCity() })
+        cityRow.setOnClickListener { chooseCity() }
+        content.addView(cityRow, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
+        sosPanel()
+        dangerPanel()
+        content.addView(text("Городские разделы", 21f, Color.WHITE, true))
+        featureStrip()
+        card("💬  Онлайн-чат", "Общение жителей города") { showCommunityChat() }
+        content.addView(text("Полезное рядом  →", 21f, Color.WHITE, true).apply {
+            setPadding(0, dp(12), 0, dp(2))
+        })
         val nearbyScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
         val nearbyRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         listOf(
-            "Аптеки" to "Справочник аптек",
-            "Такси" to "Контакты такси",
-            "Полезные адреса" to "Городские службы"
-        ).forEach { (name, detail) ->
-            val tile = navigationTile(name, detail) {
-                showPage(name, "Сведения появятся после подключения справочника.")
-            }
-            nearbyRow.addView(tile, LinearLayout.LayoutParams(dp(165), -2).apply { rightMargin = dp(8) })
+            Triple("💊", "Аптеки", "Справочник аптек"),
+            Triple("🚕", "Такси", "Контакты такси"),
+            Triple("📍", "Полезные адреса", "Городские службы")
+        ).forEach { item ->
+            nearbyRow.addView(iconTile(item.first, item.second, item.third) {
+                showPage(item.second, "Сведения появятся после подключения справочника.")
+            }, LinearLayout.LayoutParams(dp(150), dp(112)).apply { rightMargin = dp(8) })
         }
         nearbyScroll.addView(nearbyRow)
         content.addView(nearbyScroll)
-        content.addView(text("Навигация", 16f, muted))
-        navigationRow(
-            Triple("Главная", "Главный экран", { showHome() }),
-            Triple("Карта", "Город", { showPage("Карта", "Карта пока не подключена.") })
-        )
-        navigationRow(
-            Triple("Опасности", "Оповещения", { showPage("Опасности", "Нет подтверждённых актуальных данных. Это не означает отсутствие опасности.") }),
-            Triple("Ещё", "Другие разделы", { showPage("Ещё", "Дополнительные сервисы.") })
-        )
+        bottomNav()
     }
 
     private fun showPage(title: String, description: String) {
