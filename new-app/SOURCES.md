@@ -36,3 +36,7 @@ Scope: electricity and water reports for Donetsk and Makeevka. These are discove
 Verification evidence: https://dontimes.ru/oficzialnye-resursy-municzipalnyh-obrazovanij-doneczkoj-narodnoj-respubliki-v-soczialnyh-setyah/ ; https://t.me/s/Novosti_Makeevka?after=88901 ; https://news-donetsk.ru/economy/2026/10/22/495765.html . For additional cities, use the official administration directory, verify each account before enabling.
 
 Fuel: single shared feed for Donetsk and Makeevka only. Do not fabricate station availability, prices or queues. For other selected cities show scope notice, not city-specific fuel data.
+
+## Shared news source
+
+User-selected single MAX channel for the city-independent News section: https://max.ru/vesti . The Android app currently opens the channel via external link; automated post ingestion is NOT implemented. Do not invent feed items or imply a working MAX API.
