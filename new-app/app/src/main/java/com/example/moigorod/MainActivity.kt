@@ -357,7 +357,7 @@ class MainActivity : Activity() {
             rightMargin = dp(4)
         })
         row.addView(button("⚙") {
-            showPage("Настройки", "Настройки приложения.")
+            showSettings()
         }, LinearLayout.LayoutParams(dp(48), dp(48)))
         content.addView(row)
     }
@@ -709,6 +709,41 @@ class MainActivity : Activity() {
         shell(title)
         content.addView(text("Город: $city", 16f, muted))
         content.addView(text(description, 16f, muted))
+        content.addView(button("← На главную") { showHome() })
+    }
+
+    private fun showSettings() {
+        currentPage = "settings"
+        shell("⚙ Настройки")
+        content.addView(text("Источник данных", 18f, Color.WHITE, true))
+        content.addView(text("Укажите HTTPS-адрес API сервера без /api/... в конце. Пока сервер не развёрнут и не проверен, это поле можно оставить пустым.", 14f, muted))
+        val current = getPreferences(MODE_PRIVATE).getString("utility_api_base", "").orEmpty()
+        val field = EditText(this).apply {
+            setText(current)
+            hint = "https://api.example.org"
+            isSingleLine = true
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_URI
+            setTextColor(Color.WHITE)
+            setHintTextColor(muted)
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            background = outlinedPanel()
+        }
+        content.addView(field, LinearLayout.LayoutParams(-1, dp(52)).apply { topMargin = dp(10) })
+        content.addView(button("Сохранить адрес") {
+            val value = field.text.toString().trim().trimEnd('/')
+            val uri = try { android.net.Uri.parse(value) } catch (_: Exception) { null }
+            if (!value.startsWith("https://") || uri?.host.isNullOrBlank()) {
+                android.widget.Toast.makeText(this, "Нужен корректный HTTPS-адрес сервера.", android.widget.Toast.LENGTH_LONG).show()
+            } else {
+                getPreferences(MODE_PRIVATE).edit().putString("utility_api_base", value).apply()
+                android.widget.Toast.makeText(this, "Адрес сохранён.", android.widget.Toast.LENGTH_SHORT).show()
+                showSettings()
+            }
+        })
+        content.addView(button("Очистить адрес") {
+            getPreferences(MODE_PRIVATE).edit().remove("utility_api_base").apply()
+            showSettings()
+        })
         content.addView(button("← На главную") { showHome() })
     }
 
