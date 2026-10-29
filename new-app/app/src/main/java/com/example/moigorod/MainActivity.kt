@@ -63,6 +63,8 @@ class MainActivity : Activity() {
         val scroll = ScrollView(this).apply {
             setBackgroundColor(bg)
             isFillViewport = true
+            overScrollMode = View.OVER_SCROLL_NEVER
+            isVerticalScrollBarEnabled = false
         }
         content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -503,7 +505,7 @@ class MainActivity : Activity() {
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
-            setPadding(0, dp(2), 0, 0)
+            setPadding(0, 0, 0, dp(6))
         }
         val items = listOf(
             Triple("⌂", "Главная", { showHome() }),
