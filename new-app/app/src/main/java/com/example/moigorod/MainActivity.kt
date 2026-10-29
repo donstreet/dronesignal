@@ -181,32 +181,38 @@ class MainActivity : Activity() {
         val panel = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(12), dp(10), dp(14), dp(10))
-            background = outlinedPanel()
+            setPadding(dp(14), dp(12), dp(14), dp(12))
+            background = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                cornerRadius = dp(24).toFloat()
+                setColor(Color.rgb(34, 35, 39))
+                setStroke(dp(1), Color.rgb(198, 61, 43))
+            }
             setOnClickListener { showSos() }
             isClickable = true
         }
-        val sosCircle = TextView(this).apply {
+        val sosBadge = TextView(this).apply {
             text = "SOS"
-            textSize = 16f
+            textSize = 15f
             setTypeface(null, Typeface.BOLD)
             gravity = Gravity.CENTER
             setTextColor(Color.WHITE)
             background = android.graphics.drawable.GradientDrawable().apply {
-                shape = android.graphics.drawable.GradientDrawable.OVAL
-                setColor(accent)
-                setStroke(dp(2), Color.rgb(255, 125, 105))
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                cornerRadius = dp(9).toFloat()
+                setColor(Color.rgb(205, 43, 51))
+                setStroke(dp(1), Color.rgb(238, 104, 103))
             }
         }
-        panel.addView(sosCircle, LinearLayout.LayoutParams(dp(62), dp(62)))
+        panel.addView(sosBadge, LinearLayout.LayoutParams(dp(48), dp(48)))
         val words = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(14), 0, 0, 0)
         }
-        words.addView(text("112", 24f, Color.WHITE, true))
-        words.addView(text("Экстренная помощь", 14f, muted))
+        words.addView(text("SOS 112", 22f, Color.WHITE, true))
+        words.addView(text("Экстренный вызов", 14f, muted))
         panel.addView(words, LinearLayout.LayoutParams(0, -2, 1f))
-        panel.addView(text("›", 28f, accent, true))
+        panel.addView(text("›", 28f, Color.WHITE, true))
         content.addView(panel, LinearLayout.LayoutParams(-1, -2).apply {
             topMargin = dp(8); bottomMargin = dp(10)
         })
@@ -368,7 +374,6 @@ class MainActivity : Activity() {
         cityRow.setOnClickListener { chooseCity() }
         content.addView(cityRow, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
         sosPanel()
-        dangerPanel()
         content.addView(text("Городские разделы", 21f, Color.WHITE, true))
         featureStrip()
         card("💬  Онлайн-чат", "Общение жителей города") { showCommunityChat() }
