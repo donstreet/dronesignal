@@ -64,6 +64,25 @@ class MainActivity : Activity() {
         content.addView(text(message, 15f, muted))
     }
 
+    private fun card(title: String, description: String, action: (() -> Unit)? = null) {
+        val panel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(12), dp(16), dp(12))
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setColor(surface)
+                cornerRadius = dp(16).toFloat()
+            }
+            isClickable = action != null
+            if (action != null) setOnClickListener { action() }
+        }
+        panel.addView(text(title, 19f, Color.WHITE, true))
+        panel.addView(text(description, 14f, muted))
+        content.addView(panel, LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(10)
+            bottomMargin = dp(6)
+        })
+    }
+
     private fun chooseCity() {
         val cities = arrayOf(
             "Авдеевка",
@@ -162,8 +181,10 @@ class MainActivity : Activity() {
     private fun showHome() {
         shell("МОЙ ГОРОД")
         content.addView(button("📍 $city  ▾") { chooseCity() })
-        section("Объявления", "Нет загруженных объявлений. Данные появятся после подключения сервера.")
-        section("Опасность", "Статус не получен. Отсутствие данных не означает отсутствие опасности.")
+        card("Объявления", "Публикаций пока нет. Обновления появятся после подключения сервера.")
+        card("Статус опасности неизвестен", "Нет подтверждённых актуальных данных. Это не означает отсутствие опасности.") {
+            showPage("Опасности", "Нет подтверждённых актуальных данных.")
+        }
         content.addView(button("Опасности") { showPage("Опасности", "Нет подтверждённых актуальных данных.") })
         content.addView(button("Свет") { showPage("Свет", "Информация об отключениях пока не загружена.") })
         content.addView(button("Вода") { showPage("Вода", "Информация об отключениях пока не загружена.") })
