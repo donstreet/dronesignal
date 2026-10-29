@@ -263,7 +263,7 @@ class MainActivity : Activity() {
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         items.forEach { item ->
             val tile = iconTile(item.first, item.second, "") {
-                showPage(item.second, when (item.second) {
+                if (item.second == "Свет") { showElectricity() } else showPage(item.second, when (item.second) {
                     "Свет" -> "Данные об отключениях пока не загружены."
                     "Вода" -> "Данные о водоснабжении пока не загружены."
                     "Топливо" -> "Данные о наличии топлива пока не загружены."
@@ -701,6 +701,23 @@ class MainActivity : Activity() {
         shell(title)
         content.addView(text("Город: $city", 16f, muted))
         content.addView(text(description, 16f, muted))
+        content.addView(button("← На главную") { showHome() })
+    }
+
+    private fun showElectricity() {
+        currentPage = "electricity"
+        shell("⚡ Свет")
+        content.addView(text("Город: $city", 17f, Color.WHITE, true))
+        if (city == "Выберите город") {
+            card("Выберите город", "Чтобы показывать отключения по вашему населённому пункту.")
+            content.addView(button("Выбрать город") { chooseCity() })
+        } else {
+            card("Сведения об электроснабжении", "Проверяем актуальные сообщения для выбранного города. Отсутствие данных не означает, что отключений нет.")
+            card("Аварийные отключения", "Подтверждённых сведений пока не поступило.")
+            card("Плановые работы", "Расписание пока не опубликовано в подключённом источнике.")
+            content.addView(text("Адреса и предполагаемое время восстановления появятся вместе с сообщением источника.", 14f, muted))
+            content.addView(button("Обновить сведения") { showElectricity() })
+        }
         content.addView(button("← На главную") { showHome() })
     }
 
