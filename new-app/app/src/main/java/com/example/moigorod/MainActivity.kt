@@ -937,6 +937,47 @@ class MainActivity : Activity() {
         content.addView(button("← На главную") { showHome() })
     }
 
+    private fun friendlyNewsSource(sourceId: String): String = when (sourceId) {
+        "donetsk_admin" -> "Администрация Донецка"
+        "donetsk_head" -> "Глава Донецка"
+        "makeevka_news" -> "Новости Макеевки"
+        "debaltsevo_admin" -> "Администрация Дебальцево"
+        "debaltsevo_head" -> "Глава Дебальцево"
+        "dokuchaevsk_admin" -> "Администрация Докучаевска"
+        "dokuchaevsk_head" -> "Глава Докучаевска"
+        "gorlovka_admin" -> "Администрация Горловки"
+        "enakievo_admin" -> "Администрация Енакиево"
+        "enakievo_head" -> "Глава Енакиево"
+        "ilovaisk_admin" -> "Администрация Иловайска"
+        "ilovaisk_head" -> "Руководитель Иловайска"
+        "mariupol_admin" -> "Администрация Мариуполя"
+        "mariupol_head" -> "Глава Мариуполя"
+        "snezhnoe_admin" -> "Администрация Снежного"
+        "snezhnoe_head" -> "Глава Снежного"
+        "torez_admin" -> "Администрация Тореза"
+        "khartsyzsk_admin" -> "Администрация Харцызска"
+        "amvrosievka_admin" -> "Администрация Амвросиевки"
+        "amvrosievka_head" -> "Глава Амвросиевки"
+        "volnovakha_admin" -> "Администрация Волновахи"
+        "volnovakha_head" -> "Глава Волновахи"
+        "shakhtarsk_admin" -> "Администрация Шахтёрска"
+        "shakhtarsk_head" -> "Глава Шахтёрска"
+        "novoazovsk_admin" -> "Администрация Новоазовска"
+        "novoazovsk_head" -> "Руководитель Новоазовского округа"
+        "telmanovo_admin" -> "Администрация Тельманово"
+        "starobeshevo_admin" -> "Администрация Старобешево"
+        "volodarsk_admin" -> "Администрация Володарского"
+        "mangush_admin" -> "Администрация Мангуша"
+        "zhdanovka_admin" -> "Администрация Ждановки"
+        "kirovskoe_admin" -> "Администрация Кировского"
+        "yasinovataya_admin" -> "Администрация Ясиноватой"
+        "krasny_liman_admin" -> "Администрация Красного Лимана"
+        "fuel_dnr" -> "Источник по топливу"
+        "benz_dnr" -> "Источник по топливу"
+        "voda_dnr" -> "Источник по водоснабжению"
+        else -> "Официальный источник"
+    }
+
     private fun showNews() {
         currentPage = "news"
         shell("▤ Новости")
@@ -973,9 +1014,15 @@ class MainActivity : Activity() {
                             for (i in 0 until rows.length()) {
                                 val item = rows.getJSONObject(i)
                                 val sourceUrl = item.optString("source_url")
+                                val parsedSource = android.net.Uri.parse(sourceUrl)
+                                val sourceHost = parsedSource.host?.lowercase()
+                                val trustedSource = parsedSource.scheme == "https" &&
+                                    parsedSource.userInfo == null &&
+                                    (sourceHost == "t.me" || sourceHost == "max.ru") &&
+                                    parsedSource.path.orEmpty().length > 1
                                 if (item.optString("city") == selectedCity &&
                                     item.optString("verification") == "confirmed" &&
-                                    sourceUrl.startsWith("https://") &&
+                                    trustedSource &&
                                     item.optString("title").isNotBlank() &&
                                     item.optString("published_at").isNotBlank()) accepted.add(item)
                             }
@@ -996,12 +1043,17 @@ class MainActivity : Activity() {
                                         background = outlinedPanel()
                                         addView(text(item.optString("title"), 17f, Color.WHITE, true))
                                         addView(text(item.optString("summary"), 15f, muted))
-                                        addView(text(item.optString("source") + " · " + item.optString("published_at"), 12f, muted))
+                                        addView(text(friendlyNewsSource(item.optString("source")) + " · " + item.optString("published_at"), 12f, muted))
                                         addView(button("Открыть оригинал") {
-                                            startActivity(android.content.Intent(
-                                                android.content.Intent.ACTION_VIEW,
-                                                android.net.Uri.parse(item.optString("source_url"))
-                                            ))
+                                            val sourceUri = android.net.Uri.parse(item.optString("source_url"))
+                                            if (sourceUri.scheme == "https" &&
+                                                sourceUri.userInfo == null &&
+                                                (sourceUri.host?.lowercase() == "t.me" || sourceUri.host?.lowercase() == "max.ru") &&
+                                                sourceUri.path.orEmpty().length > 1) {
+                                                startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, sourceUri))
+                                            } else {
+                                                android.widget.Toast.makeText(this@MainActivity, "Ссылка на источник не прошла проверку.", android.widget.Toast.LENGTH_LONG).show()
+                                            }
                                         })
                                     }
                                     val params = LinearLayout.LayoutParams(-1, -2)
