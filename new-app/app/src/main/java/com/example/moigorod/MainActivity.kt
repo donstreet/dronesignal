@@ -303,13 +303,13 @@ class MainActivity : Activity() {
         val panel = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(14), dp(12), dp(14), dp(12))
+            setPadding(dp(12), dp(7), dp(12), dp(7))
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
                 intArrayOf(Color.rgb(43, 29, 32), Color.rgb(34, 35, 39))
             ).apply {
                 shape = android.graphics.drawable.GradientDrawable.RECTANGLE
-                cornerRadius = dp(22).toFloat()
+                cornerRadius = dp(18).toFloat()
                 setStroke(dp(1), Color.rgb(142, 54, 45))
             }
             setOnClickListener { showCommunityChat() }
@@ -317,36 +317,51 @@ class MainActivity : Activity() {
         }
         val chatBadge = TextView(this).apply {
             text = "•••"
-            textSize = 17f
+            textSize = 14f
             setTypeface(null, Typeface.BOLD)
             gravity = Gravity.CENTER
             setTextColor(Color.rgb(232, 218, 218))
             background = android.graphics.drawable.GradientDrawable().apply {
                 shape = android.graphics.drawable.GradientDrawable.RECTANGLE
-                cornerRadius = dp(14).toFloat()
+                cornerRadius = dp(11).toFloat()
                 setColor(Color.rgb(54, 42, 45))
                 setStroke(dp(1), Color.rgb(126, 55, 49))
             }
         }
-        panel.addView(chatBadge, LinearLayout.LayoutParams(dp(44), dp(44)))
+        panel.addView(chatBadge, LinearLayout.LayoutParams(dp(34), dp(34)))
         val words = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(12), 0, 0, 0)
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(10), 0, 0, 0)
         }
-        words.addView(text("Онлайн-чат", 18f, Color.WHITE, true))
-        words.addView(text("Общайтесь, задавайте вопросы,", 12f, muted))
-        words.addView(text("получайте помощь", 12f, muted))
-        val mod = TextView(this).apply {
-            text = "🛡 Автомодератор"
-            textSize = 11f
-            setTextColor(Color.rgb(201, 125, 113))
-            setPadding(0, dp(4), 0, 0)
-        }
-        words.addView(mod)
+        words.addView(TextView(this).apply {
+            text = "Онлайн-чат"
+            textSize = 16f
+            setTextColor(Color.WHITE)
+            setTypeface(null, Typeface.BOLD)
+            setPadding(0, 0, 0, 0)
+            includeFontPadding = false
+        }, LinearLayout.LayoutParams(-1, dp(22)))
+        words.addView(TextView(this).apply {
+            text = "Вопросы и помощь · Автомодератор"
+            textSize = 10f
+            setTextColor(muted)
+            setPadding(0, 0, 0, 0)
+            includeFontPadding = false
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        }, LinearLayout.LayoutParams(-1, dp(17)))
         panel.addView(words, LinearLayout.LayoutParams(0, -2, 1f))
-        panel.addView(text("›", 24f, Color.rgb(171, 77, 65), true))
-        content.addView(panel, LinearLayout.LayoutParams(-1, -2).apply {
-            topMargin = dp(8); bottomMargin = dp(8)
+        panel.addView(TextView(this).apply {
+            text = "›"
+            textSize = 22f
+            setTextColor(Color.rgb(171, 77, 65))
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, 0)
+        }, LinearLayout.LayoutParams(dp(18), dp(34)))
+        content.addView(panel, LinearLayout.LayoutParams(-1, dp(60)).apply {
+            topMargin = dp(6)
+            bottomMargin = dp(6)
         })
     }
 
