@@ -89,6 +89,32 @@ class MainActivity : Activity() {
         })
     }
 
+    private fun navigationTile(label: String, description: String, action: () -> Unit): LinearLayout =
+        LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(14), dp(12), dp(10), dp(12))
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setColor(surface)
+                cornerRadius = dp(14).toFloat()
+            }
+            addView(text(label, 18f, Color.WHITE, true))
+            addView(text(description, 13f, muted))
+            setOnClickListener { action() }
+            isClickable = true
+        }
+
+    private fun navigationRow(
+        first: Triple<String, String, () -> Unit>,
+        second: Triple<String, String, () -> Unit>
+    ) {
+        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        row.addView(navigationTile(first.first, first.second, first.third),
+            LinearLayout.LayoutParams(0, -2, 1f).apply { rightMargin = dp(5) })
+        row.addView(navigationTile(second.first, second.second, second.third),
+            LinearLayout.LayoutParams(0, -2, 1f).apply { leftMargin = dp(5) })
+        content.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
+    }
+
     private fun chooseCity() {
         val cities = arrayOf(
             "Авдеевка",
@@ -192,12 +218,19 @@ class MainActivity : Activity() {
         card("Статус опасности неизвестен", "Нет подтверждённых актуальных данных. Это не означает отсутствие опасности.") {
             showPage("Опасности", "Нет подтверждённых актуальных данных.")
         }
-        content.addView(button("Опасности") { showPage("Опасности", "Нет подтверждённых актуальных данных.") })
-        content.addView(button("Свет") { showPage("Свет", "Информация об отключениях пока не загружена.") })
-        content.addView(button("Вода") { showPage("Вода", "Информация об отключениях пока не загружена.") })
-        content.addView(button("Топливо") { showPage("Топливо", "Данные о наличии топлива пока не загружены.") })
-        content.addView(button("Новости") { showPage("Новости", "Новости пока не загружены.") })
-        content.addView(button("Чат") { showPage("Чат", "Вход по подтверждённому номеру телефона будет доступен после подключения сервера.") })
+        content.addView(text("Разделы", 21f, Color.WHITE, true))
+        navigationRow(
+            Triple("⚠ Опасности", "Оповещения", { showPage("Опасности", "Нет подтверждённых актуальных данных.") }),
+            Triple("⚡ Свет", "Отключения", { showPage("Свет", "Информация об отключениях пока не загружена.") })
+        )
+        navigationRow(
+            Triple("💧 Вода", "Водоснабжение", { showPage("Вода", "Информация об отключениях пока не загружена.") }),
+            Triple("⛽ Топливо", "Наличие", { showPage("Топливо", "Данные о наличии топлива пока не загружены.") })
+        )
+        navigationRow(
+            Triple("▤ Новости", "Городская лента", { showPage("Новости", "Новости пока не загружены.") }),
+            Triple("☏ Чат", "Общение", { showPage("Чат", "Вход по подтверждённому номеру телефона будет доступен после подключения сервера.") })
+        )
         content.addView(button("SOS · Экстренная помощь") { showSos() })
     }
 
