@@ -14,6 +14,7 @@ class MainActivity : Activity() {
     private val surface = Color.rgb(35, 36, 40)
     private val accent = Color.rgb(252, 63, 29)
     private val muted = Color.rgb(180, 183, 190)
+    private fun dp(value: Int) = (value * resources.displayMetrics.density + 0.5f).toInt()
     private lateinit var content: LinearLayout
     private var city = "Выберите город"
 
@@ -51,7 +52,7 @@ class MainActivity : Activity() {
         val scroll = ScrollView(this).apply { setBackgroundColor(bg) }
         content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(24, 28, 24, 36)
+            setPadding(dp(20), dp(20), dp(20), dp(28))
         }
         scroll.addView(content)
         setContentView(scroll)
