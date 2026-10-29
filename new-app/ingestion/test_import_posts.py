@@ -21,6 +21,25 @@ class ImportTests(unittest.TestCase):
                 self.assertEqual(conn.execute("SELECT COUNT(*) FROM review_posts").fetchone()[0], 1)
                 self.assertEqual(conn.execute("SELECT moderation_status, requires_review FROM review_posts").fetchone(), ("draft", 1))
 
+    def test_official_municipal_channel_is_allowlisted_and_staged(self):
+        p = payload()
+        p["posts"][0].update({
+            "source_id": "gorlovka_admin",
+            "source_url": "https://t.me/Gorlowka_now/42",
+            "post_id": "42",
+            "category": "news",
+            "kind": "general",
+            "cities": ["Горловка"],
+            "text": "Администрация Горловки сообщает о работах",
+            "requires_review": True,
+        })
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "db.sqlite"
+            self.assertEqual(import_drafts(db, p), 1)
+            with sqlite3.connect(db) as conn:
+                row = conn.execute("SELECT source_id, source_url, moderation_status FROM review_posts").fetchone()
+            self.assertEqual(row, ("gorlovka_admin", "https://t.me/Gorlowka_now/42", "draft"))
+
     def test_reject_wrong_source_url(self):
         p = payload()
         p["posts"][0]["source_url"] = "https://evil.example/42"
