@@ -140,11 +140,42 @@ class MainActivity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        val brand = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        brand.addView(text("📍 МОЙ ГОРОД", 24f, Color.WHITE, true))
-        brand.addView(text("Безопасность. Информация. Помощь.", 12f, muted))
+        val brand = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val cityBadge = TextView(this).apply {
+            text = "▥"
+            textSize = 27f
+            gravity = Gravity.CENTER
+            setTextColor(Color.WHITE)
+            background = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                cornerRadius = dp(12).toFloat()
+                setColor(Color.rgb(35, 36, 40))
+                setStroke(dp(2), accent)
+            }
+        }
+        brand.addView(cityBadge, LinearLayout.LayoutParams(dp(52), dp(52)).apply {
+            rightMargin = dp(10)
+        })
+        val brandWords = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        brandWords.addView(TextView(this).apply {
+            text = "МОЙ ГОРОД"
+            textSize = 21f
+            setTextColor(Color.WHITE)
+            setTypeface(null, Typeface.BOLD)
+            setPadding(0, 0, 0, 0)
+        })
+        brandWords.addView(TextView(this).apply {
+            text = "Безопасность. Информация. Помощь."
+            textSize = 10f
+            setTextColor(muted)
+            setPadding(0, 0, 0, 0)
+        })
+        brand.addView(brandWords, LinearLayout.LayoutParams(0, -2, 1f))
         row.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
-        row.addView(button("🔔") {
+        row.addView(button("♧") {
             showPage("Уведомления", "Здесь будут отображаться уведомления приложения.")
         }, LinearLayout.LayoutParams(dp(48), dp(48)))
         row.addView(button("⚙") {
