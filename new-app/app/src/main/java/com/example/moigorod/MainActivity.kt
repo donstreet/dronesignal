@@ -226,7 +226,7 @@ class MainActivity : Activity() {
             Triple("▤ Новости", "Городская лента", { showPage("Новости", "Новости пока не загружены.") })
         )
         card("Онлайн-чат", "Общение жителей города") {
-            showPage("Онлайн-чат", "Общий чат жителей выбранного города. Общение станет доступно после подключения сервера и авторизации.")
+            showCommunityChat()
         }
         content.addView(text("Полезное рядом  →", 21f, Color.WHITE, true))
         val nearbyScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
@@ -259,6 +259,21 @@ class MainActivity : Activity() {
         shell(title)
         content.addView(text("Город: $city", 16f, muted))
         content.addView(text(description, 16f, muted))
+        content.addView(button("← На главную") { showHome() })
+    }
+
+    private fun showCommunityChat() {
+        currentPage = "chat"
+        shell("Онлайн-чат")
+        if (city == "Выберите город") {
+            content.addView(text("Для входа в городской чат сначала выберите город.", 16f, muted))
+            content.addView(button("Выбрать город") { chooseCity() })
+        } else {
+            content.addView(text("Общий чат: $city", 21f, Color.WHITE, true))
+            content.addView(text("Здесь жители выбранного города смогут общаться друг с другом.", 16f, muted))
+            card("Правила и модерация", "Автоматический фильтр спама, жалобы на сообщения и проверка модератором. Нарушения могут приводить к ограничению доступа.")
+            content.addView(text("Отправка сообщений станет доступна после подключения сервера и авторизации. Сейчас сообщения не отправляются.", 15f, muted))
+        }
         content.addView(button("← На главную") { showHome() })
     }
 
