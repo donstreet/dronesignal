@@ -7,6 +7,7 @@ from threading import Thread
 from http.server import ThreadingHTTPServer
 from urllib.request import urlopen
 from urllib.error import HTTPError
+from urllib.parse import quote
 
 from public_outages_api import initialize, get_news, make_handler
 
@@ -51,7 +52,7 @@ class PublicNewsTests(unittest.TestCase):
                     self.assertEqual(response.status, 200)
                     self.assertEqual(payload["items"], [])
                     self.assertIn("updated_at", payload)
-                for suffix in ("/api/news", "/api/news?city=Горловка&unexpected=1"):
+                for suffix in ("/api/news", "/api/news?city=" + quote("Горловка") + "&unexpected=1"):
                     with self.assertRaises(HTTPError) as caught:
                         urlopen(base + suffix)
                     self.assertEqual(caught.exception.code, 400)
