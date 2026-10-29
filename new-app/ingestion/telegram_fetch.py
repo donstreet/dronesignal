@@ -97,7 +97,7 @@ class TelegramPreviewParser(HTMLParser):
         self.depth -= 1
         if self.depth == 0:
             if self.post["url"] and self.post["text"].strip():
-                self.post["text"] = re.sub(r"\\s+", " ", self.post["text"]).strip()
+                self.post["text"] = re.sub(r"\s+", " ", self.post["text"]).strip()
                 self.posts.append(self.post)
             self.post = None
 
@@ -115,7 +115,7 @@ def collect():
     for source_id, channel in CHANNELS.items():
         try:
             for post in fetch_channel(channel):
-                match = re.fullmatch(r"https://t\\.me/" + re.escape(channel) + r"/(\\d+)", post["url"])
+                match = re.fullmatch(r"https://t\.me/" + re.escape(channel) + r"/(\d+)", post["url"])
                 if not match:
                     continue
                 key = (source_id, match.group(1))
