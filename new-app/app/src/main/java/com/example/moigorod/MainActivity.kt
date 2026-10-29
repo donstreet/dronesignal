@@ -303,13 +303,13 @@ class MainActivity : Activity() {
         val panel = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(12), dp(7), dp(12), dp(7))
+            setPadding(dp(14), dp(12), dp(14), dp(12))
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
                 intArrayOf(Color.rgb(43, 29, 32), Color.rgb(34, 35, 39))
             ).apply {
                 shape = android.graphics.drawable.GradientDrawable.RECTANGLE
-                cornerRadius = dp(18).toFloat()
+                cornerRadius = dp(22).toFloat()
                 setStroke(dp(1), Color.rgb(142, 54, 45))
             }
             setOnClickListener { showCommunityChat() }
@@ -317,51 +317,36 @@ class MainActivity : Activity() {
         }
         val chatBadge = TextView(this).apply {
             text = "•••"
-            textSize = 14f
+            textSize = 16f
             setTypeface(null, Typeface.BOLD)
             gravity = Gravity.CENTER
             setTextColor(Color.rgb(232, 218, 218))
             background = android.graphics.drawable.GradientDrawable().apply {
                 shape = android.graphics.drawable.GradientDrawable.RECTANGLE
-                cornerRadius = dp(11).toFloat()
+                cornerRadius = dp(12).toFloat()
                 setColor(Color.rgb(54, 42, 45))
                 setStroke(dp(1), Color.rgb(126, 55, 49))
             }
         }
-        panel.addView(chatBadge, LinearLayout.LayoutParams(dp(34), dp(34)))
+        panel.addView(chatBadge, LinearLayout.LayoutParams(dp(44), dp(44)))
         val words = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(10), 0, 0, 0)
+            setPadding(dp(12), 0, 0, 0)
         }
+        words.addView(text("Онлайн-чат", 18f, Color.WHITE, true))
+        words.addView(text("Вопросы, общение и помощь", 12f, muted))
         words.addView(TextView(this).apply {
-            text = "Онлайн-чат"
-            textSize = 16f
-            setTextColor(Color.WHITE)
-            setTypeface(null, Typeface.BOLD)
-            setPadding(0, 0, 0, 0)
-            includeFontPadding = false
-        }, LinearLayout.LayoutParams(-1, dp(22)))
-        words.addView(TextView(this).apply {
-            text = "Вопросы и помощь · Автомодератор"
+            text = "🛡 Автомодератор"
             textSize = 10f
-            setTextColor(muted)
+            setTextColor(Color.rgb(201, 125, 113))
             setPadding(0, 0, 0, 0)
-            includeFontPadding = false
-            maxLines = 1
-            ellipsize = android.text.TextUtils.TruncateAt.END
-        }, LinearLayout.LayoutParams(-1, dp(17)))
+        })
         panel.addView(words, LinearLayout.LayoutParams(0, -2, 1f))
-        panel.addView(TextView(this).apply {
-            text = "›"
-            textSize = 22f
-            setTextColor(Color.rgb(171, 77, 65))
-            gravity = Gravity.CENTER
-            setPadding(0, 0, 0, 0)
-        }, LinearLayout.LayoutParams(dp(18), dp(34)))
-        content.addView(panel, LinearLayout.LayoutParams(-1, dp(60)).apply {
-            topMargin = dp(6)
-            bottomMargin = dp(6)
+        panel.addView(text("›", 24f, Color.rgb(171, 77, 65), true))
+        content.addView(panel, LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(8)
+            bottomMargin = dp(8)
         })
     }
 
@@ -531,7 +516,23 @@ class MainActivity : Activity() {
             background = outlinedPanel()
             setPadding(dp(14), dp(2), dp(10), dp(2))
         }
-        cityRow.addView(text("📍  $city", 16f, Color.WHITE, true), LinearLayout.LayoutParams(0, -2, 1f))
+        val cityIcon = TextView(this).apply {
+            text = "▥"
+            textSize = 22f
+            gravity = Gravity.CENTER
+            setTextColor(Color.WHITE)
+            setPadding(0, 0, 0, 0)
+            background = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                cornerRadius = dp(9).toFloat()
+                setColor(Color.rgb(35, 36, 40))
+                setStroke(dp(1), accent)
+            }
+        }
+        cityRow.addView(cityIcon, LinearLayout.LayoutParams(dp(38), dp(38)).apply {
+            rightMargin = dp(10)
+        })
+        cityRow.addView(text(city, 16f, Color.WHITE, true), LinearLayout.LayoutParams(0, -2, 1f))
         cityRow.addView(button("Изменить ▾") { chooseCity() })
         cityRow.setOnClickListener { chooseCity() }
         content.addView(cityRow, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
