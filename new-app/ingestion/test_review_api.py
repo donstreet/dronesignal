@@ -11,9 +11,9 @@ class ReviewApiTests(unittest.TestCase):
             payload = {"schema_version": 1, "publication_status": "draft",
                        "review_required": True, "posts": [
                 {"source_id": "voda_dnr", "post_id": "10",
-                 "source_url": "https://t.me/vodavdnr/10", "published_at": "2026-10-29",
+                 "source_url": "https://t.me/vodavdnr/10", "published_at": "2026-10-29T09:00:00+00:00",
                  "category": "water", "kind": "schedule", "cities": ["Макеевка"],
-                 "text": "График воды"}]}
+                 "text": "График воды", "requires_review": False}]}
             import_drafts(db, payload)
             rows = list_drafts(db, category="water")
             self.assertEqual(len(rows), 1)
