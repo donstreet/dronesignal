@@ -23,6 +23,7 @@ class TelegramPreviewParser(HTMLParser):
         self.depth = 0
         self.post = None
         self.text_depth = None
+        self.text_parts = []
         self.posts = []
 
     def handle_starttag(self, tag, attrs):
@@ -33,6 +34,7 @@ class TelegramPreviewParser(HTMLParser):
                 self.depth += 1
             if tag == "div" and "tgme_widget_message_text" in classes:
                 self.text_depth = self.depth
+                self.text_parts = []
             if tag == "a" and "tgme_widget_message_date" in classes:
                 self.post["url"] = a.get("href", self.post["url"])
             if tag == "time":
@@ -43,7 +45,7 @@ class TelegramPreviewParser(HTMLParser):
 
     def handle_data(self, data):
         if self.post is not None and self.text_depth is not None:
-            self.post["text"] += data
+            self.text_parts.append(data)
 
     def handle_endtag(self, tag):
         if self.post is None:
@@ -51,6 +53,8 @@ class TelegramPreviewParser(HTMLParser):
         if tag != "div":
             return
         if self.text_depth == self.depth:
+            self.post["text"] += " ".join(self.text_parts)
+            self.text_parts = []
             self.text_depth = None
         self.depth -= 1
         if self.depth == 0:
