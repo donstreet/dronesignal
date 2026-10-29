@@ -263,7 +263,7 @@ class MainActivity : Activity() {
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         items.forEach { item ->
             val tile = iconTile(item.first, item.second, "") {
-                if (item.second == "Свет") { showElectricity() } else if (item.second == "Вода") { showWater() } else showPage(item.second, when (item.second) {
+                if (item.second == "Свет") { showElectricity() } else if (item.second == "Вода") { showWater() } else if (item.second == "Топливо") { showFuel() } else showPage(item.second, when (item.second) {
                     "Свет" -> "Данные об отключениях пока не загружены."
                     "Вода" -> "Данные о водоснабжении пока не загружены."
                     "Топливо" -> "Данные о наличии топлива пока не загружены."
@@ -629,6 +629,7 @@ class MainActivity : Activity() {
             when (currentPage) {
                 "electricity" -> showElectricity()
                 "water" -> showWater()
+                "fuel" -> showFuel()
                 else -> showHome()
             }
         }
@@ -806,6 +807,23 @@ class MainActivity : Activity() {
             card("Плановые работы", "Расписание пока не загружено.")
             content.addView(text("Адреса, график подачи и ожидаемое восстановление появятся после подключения проверенного источника.", 14f, muted))
             content.addView(button("Обновить сведения") { showWater() })
+            content.addView(button("Изменить город") { chooseCity() })
+        }
+        content.addView(button("← На главную") { showHome() })
+    }
+
+    private fun showFuel() {
+        currentPage = "fuel"
+        shell("⛽ Топливо")
+        content.addView(text("Общая информация: Донецк и Макеевка", 17f, Color.WHITE, true))
+        card("Единая сводка", "Сведения о топливе общие для Донецка и Макеевки, независимо от выбранного из этих двух городов.")
+        if (city != "Донецк" && city != "Макеевка") {
+            card("Выбран город: $city", "Раздел пока охватывает только Донецк и Макеевку. Выберите один из них, чтобы открыть общую сводку.")
+            content.addView(button("Выбрать город") { chooseCity() })
+        } else {
+            card("Наличие топлива", "Подтверждённые сведения об АЗС пока не подключены. Не показываем вымышленные остатки и цены.")
+            card("Обновление", "После подключения проверенных источников здесь появятся сообщения о наличии и ограничениях.")
+            content.addView(button("Обновить сведения") { showFuel() })
             content.addView(button("Изменить город") { chooseCity() })
         }
         content.addView(button("← На главную") { showHome() })
