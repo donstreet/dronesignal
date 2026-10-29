@@ -17,12 +17,18 @@ class MainActivity : Activity() {
     private fun dp(value: Int) = (value * resources.displayMetrics.density + 0.5f).toInt()
     private lateinit var content: LinearLayout
     private var city = "Выберите город"
+    private var currentPage = "home"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         city = savedInstanceState?.getString("city")
             ?: getPreferences(MODE_PRIVATE).getString("city", "Выберите город")!!
         showHome()
+    }
+
+    @Deprecated("Deprecated in Android framework")
+    override fun onBackPressed() {
+        if (currentPage != "home") showHome() else super.onBackPressed()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -179,6 +185,7 @@ class MainActivity : Activity() {
     }
 
     private fun showHome() {
+        currentPage = "home"
         shell("МОЙ ГОРОД")
         content.addView(button("📍 $city  ▾") { chooseCity() })
         card("Объявления", "Публикаций пока нет. Обновления появятся после подключения сервера.")
@@ -195,6 +202,7 @@ class MainActivity : Activity() {
     }
 
     private fun showPage(title: String, description: String) {
+        currentPage = title
         shell(title)
         content.addView(text("Город: $city", 16f, muted))
         content.addView(text(description, 16f, muted))
@@ -202,6 +210,7 @@ class MainActivity : Activity() {
     }
 
     private fun showSos() {
+        currentPage = "sos"
         shell("Экстренная помощь")
         content.addView(text("Выберите действие. Ничего не отправляется автоматически.", 16f, muted))
         content.addView(button("Позвонить 112") {
