@@ -175,7 +175,7 @@ class MainActivity : Activity() {
         }
         val search = EditText(this).apply {
             hint = "Поиск города"
-            singleLine = true
+            isSingleLine = true
             inputType = android.text.InputType.TYPE_CLASS_TEXT or
                 android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
         }
