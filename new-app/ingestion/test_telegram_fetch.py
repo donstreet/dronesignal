@@ -32,7 +32,7 @@ class PreviewTests(unittest.TestCase):
     def test_dedup_and_source(self):
         with patch("telegram_fetch.CHANNELS", {"makeevka_news": "Novosti_Makeevka"}), \
              patch("telegram_fetch.fetch_channel", return_value=[
-                 {"url": "https://t.me/Novosti_Makeevka/42", "text": "График света Макеевка 29.10", "published_at": "2026-10-29"},
+                 {"url": "https://t.me/Novosti_Makeevka/42", "text": "График света Макеевка 29.10", "published_at": "2026-10-29T09:00:00+00:00"},
                  {"url": "https://t.me/Novosti_Makeevka/42", "text": "График света Макеевка 29.10", "published_at": "2026-10-29"}
              ]):
             data = collect()
