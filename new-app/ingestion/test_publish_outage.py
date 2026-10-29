@@ -15,7 +15,7 @@ class PublishTests(unittest.TestCase):
               "posts":[{"source_id":"voda_dnr","post_id":"101",
                 "source_url":"https://t.me/vodavdnr/101",
                 "published_at":"2026-10-29T09:00:00+03:00","category":"water",
-                "kind":"schedule","cities":["Макеевка"],"text":"Пример графика",
+                "kind":"schedule","cities":["Макеевка","Донецк"],"text":"Пример графика",
                 "requires_review":True}]}
             import_drafts(review,payload)
             initialize(public)
@@ -26,12 +26,16 @@ class PublishTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 submit(confirmed=False)
             with self.assertRaises(ValueError):
-                submit(city="Донецк")
+                submit(city="Новоазовск")
             self.assertEqual(get_outages(public,"water","Макеевка"),[])
             self.assertTrue(submit())
             self.assertFalse(submit())
             self.assertEqual(len(get_outages(public,"water","Макеевка")),1)
-            self.assertEqual(get_outages(public,"water","Донецк"),[])
+            self.assertTrue(submit(city="Донецк"))
+            self.assertFalse(submit(city="Донецк"))
+            self.assertEqual(len(get_outages(public,"water","Донецк")),1)
+            self.assertNotEqual(get_outages(public,"water","Донецк")[0]["id"],
+                                get_outages(public,"water","Макеевка")[0]["id"])
 
 if __name__ == "__main__":
     unittest.main()
