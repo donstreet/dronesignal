@@ -263,7 +263,7 @@ class MainActivity : Activity() {
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         items.forEach { item ->
             val tile = iconTile(item.first, item.second, "") {
-                if (item.second == "Свет") { showElectricity() } else if (item.second == "Вода") { showWater() } else if (item.second == "Топливо") { showFuel() } else showPage(item.second, when (item.second) {
+                if (item.second == "Свет") { showElectricity() } else if (item.second == "Вода") { showWater() } else if (item.second == "Топливо") { showFuel() } else if (item.second == "Новости") { showNews() } else showPage(item.second, when (item.second) {
                     "Свет" -> "Данные об отключениях пока не загружены."
                     "Вода" -> "Данные о водоснабжении пока не загружены."
                     "Топливо" -> "Данные о наличии топлива пока не загружены."
@@ -630,6 +630,7 @@ class MainActivity : Activity() {
                 "electricity" -> showElectricity()
                 "water" -> showWater()
                 "fuel" -> showFuel()
+                "news" -> showNews()
                 else -> showHome()
             }
         }
@@ -827,6 +828,23 @@ class MainActivity : Activity() {
             card("Ограничения и поставки", "Подтверждённых свежих сообщений пока нет. Это не означает, что ограничений нет.")
             content.addView(text("После подключения источников покажем АЗС, адрес, наличие, цену (если опубликована), время проверки и ссылку на сообщение.", 14f, muted))
             content.addView(button("Обновить сведения") { showFuel() })
+            content.addView(button("Изменить город") { chooseCity() })
+        }
+        content.addView(button("← На главную") { showHome() })
+    }
+
+    private fun showNews() {
+        currentPage = "news"
+        shell("▤ Новости")
+        content.addView(text("Город: $city", 17f, Color.WHITE, true))
+        if (city == "Выберите город") {
+            card("Выберите город", "Лента новостей привязана к выбранному городу.")
+            content.addView(button("Выбрать город") { chooseCity() })
+        } else {
+            card("Городская лента", "Публикации из проверенных источников для города $city появятся после подключения новостного API.")
+            card("Актуальность", "Источник новостей пока не подключён. Мы не показываем вымышленные публикации.")
+            content.addView(text("В новостях будут заголовок, краткий текст, дата публикации и ссылка на первоисточник.", 14f, muted))
+            content.addView(button("Обновить ленту") { showNews() })
             content.addView(button("Изменить город") { chooseCity() })
         }
         content.addView(button("← На главную") { showHome() })
