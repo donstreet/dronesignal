@@ -730,7 +730,7 @@ class MainActivity : Activity() {
                 Thread {
                     val outcome = try {
                         // Set the verified HTTPS production API base URL before enabling live data.
-                        val base = getPreferences(MODE_PRIVATE).getString("electricity_api_base", "").orEmpty()
+                        val base = getPreferences(MODE_PRIVATE).getString("utility_api_base", "").orEmpty()
                         require(base.startsWith("https://")) { "Источник данных пока не подключён." }
                         val url = java.net.URL(base.trimEnd('/') + "/api/outages?kind=electricity&city=" +
                             java.net.URLEncoder.encode(selectedCity, "UTF-8"))
@@ -815,7 +815,7 @@ class MainActivity : Activity() {
                 Thread {
                     val outcome = try {
                         // Set the verified HTTPS production API base URL before enabling live data.
-                        val base = getPreferences(MODE_PRIVATE).getString("electricity_api_base", "").orEmpty()
+                        val base = getPreferences(MODE_PRIVATE).getString("utility_api_base", "").orEmpty()
                         require(base.startsWith("https://")) { "Источник данных пока не подключён." }
                         val url = java.net.URL(base.trimEnd('/') + "/api/outages?kind=water&city=" +
                             java.net.URLEncoder.encode(selectedCity, "UTF-8"))
