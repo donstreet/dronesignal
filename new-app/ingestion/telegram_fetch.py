@@ -6,6 +6,7 @@ Only user-approved public Telegram channels are read. MAX requires a separate ap
 import json
 import re
 import urllib.request
+from datetime import datetime
 from html.parser import HTMLParser
 from dataclasses import asdict
 from classifier import parse_post
@@ -87,6 +88,15 @@ def collect():
                 if key in seen:
                     continue
                 seen.add(key)
+                published_at = post.get("published_at")
+                if not published_at:
+                    continue
+                try:
+                    published = datetime.fromisoformat(published_at)
+                    if published.tzinfo is None or published.utcoffset() is None:
+                        continue
+                except (TypeError, ValueError):
+                    continue
                 parsed = parse_post(post["text"], post["url"])
                 output.append({"source_id": source_id, "post_id": match.group(1),
                                "published_at": post["published_at"], **asdict(parsed)})
