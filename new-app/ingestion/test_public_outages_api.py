@@ -2,7 +2,12 @@ import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
-from public_outages_api import initialize, get_outages
+from public_outages_api import initialize, get_outages, make_handler
+from http.server import ThreadingHTTPServer
+from threading import Thread
+from urllib.request import urlopen
+from urllib.error import HTTPError
+import json
 
 class PublicOutagesTests(unittest.TestCase):
     def test_only_confirmed_visible_and_matching_city(self):
@@ -23,6 +28,29 @@ class PublicOutagesTests(unittest.TestCase):
             self.assertEqual(get_outages(path, "electricity", "Макеевка"), [])
             with self.assertRaises(ValueError):
                 get_outages(path, "water", "Другой город")
+    def test_http_filter_and_errors(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "public.sqlite3"
+            initialize(path)
+            server = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(path))
+            worker = Thread(target=server.serve_forever, daemon=True)
+            worker.start()
+            base = "http://127.0.0.1:%d" % server.server_port
+            try:
+                with urlopen(base + "/api/outages?kind=water&city=%D0%94%D0%BE%D0%BD%D0%B5%D1%86%D0%BA") as response:
+                    self.assertEqual(response.status, 200)
+                    self.assertEqual(json.load(response), {"outages": []})
+                for suffix, expected in [("/api/outages?kind=water", 400),
+                                         ("/api/outages?kind=fuel&city=%D0%94%D0%BE%D0%BD%D0%B5%D1%86%D0%BA", 400),
+                                         ("/internal/review-posts", 404)]:
+                    with self.assertRaises(HTTPError) as caught:
+                        urlopen(base + suffix)
+                    self.assertEqual(caught.exception.code, expected)
+            finally:
+                server.shutdown()
+                server.server_close()
+                worker.join(timeout=3)
+
     def test_missing_database_is_not_an_empty_feed(self):
         with tempfile.TemporaryDirectory() as temp:
             with self.assertRaises(sqlite3.OperationalError):
