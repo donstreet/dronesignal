@@ -14,6 +14,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Check Python syntax
+        working-directory: new-app/ingestion
+        run: python -m compileall -q .
       - name: Test content classifier and Telegram preview parser
         working-directory: new-app/ingestion
         run: |
