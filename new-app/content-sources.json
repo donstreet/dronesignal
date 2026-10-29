@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "id": "makeevka_news",
+      "platform": "telegram",
+      "url": "https://t.me/Novosti_Makeevka",
+      "categories": [
+        "water",
+        "electricity",
+        "news"
+      ],
+      "coverageHints": [
+        "Макеевка"
+      ],
+      "enabled": false,
+      "integrationStatus": "pending_verification"
+    },
+    {
+      "id": "fuel_dnr",
+      "platform": "telegram",
+      "url": "https://t.me/fueldnr",
+      "categories": [
+        "fuel"
+      ],
+      "coverageHints": [],
+      "enabled": false,
+      "integrationStatus": "pending_verification"
+    },
+    {
+      "id": "benz_dnr",
+      "platform": "telegram",
+      "url": "https://t.me/benz_dnr",
+      "categories": [
+        "fuel"
+      ],
+      "coverageHints": [],
+      "enabled": false,
+      "integrationStatus": "pending_verification"
+    },
+    {
+      "id": "electricity_max",
+      "platform": "max",
+      "url": "https://max.ru/id6163089292_biz",
+      "categories": [
+        "electricity"
+      ],
+      "coverageHints": [
+        "Донецк",
+        "Макеевка"
+      ],
+      "enabled": false,
+      "integrationStatus": "pending_verification"
+    },
+    {
+      "id": "voda_dnr",
+      "platform": "telegram",
+      "url": "https://t.me/vodavdnr",
+      "categories": [
+        "water"
+      ],
+      "coverageHints": [
+        "Донецк",
+        "Макеевка"
+      ],
+      "enabled": false,
+      "integrationStatus": "pending_verification"
+    },
+    {
+      "id": "vesti_max",
+      "platform": "max",
+      "url": "https://max.ru/vesti",
+      "categories": [
+        "news"
+      ],
+      "coverageHints": [],
+      "enabled": false,
+      "integrationStatus": "pending_verification"
+    }
+  ],
+  "classificationExamples": [
+    {
+      "url": "https://t.me/fueldnr/4161",
+      "category": "fuel",
+      "role": "user_supplied_trigger_example",
+      "behavior": "review_before_automation"
+    }
+  ]
+}
