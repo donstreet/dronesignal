@@ -71,6 +71,18 @@ class MainActivity : Activity() {
         scroll.addView(content)
         root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
         setContentView(root)
+        // Keep the whole layout, especially bottom navigation, above Android's system bars.
+        root.setOnApplyWindowInsetsListener { view, insets ->
+            val bottomInset = if (android.os.Build.VERSION.SDK_INT >= 30) {
+                insets.getInsets(android.view.WindowInsets.Type.navigationBars()).bottom
+            } else {
+                @Suppress("DEPRECATION")
+                insets.systemWindowInsetBottom
+            }
+            view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, bottomInset)
+            insets
+        }
+        root.requestApplyInsets()
         if (title.isNotBlank()) content.addView(text(title, 29f, Color.WHITE, true))
     }
 
@@ -673,9 +685,9 @@ class MainActivity : Activity() {
             Triple("🚕", "Такси", "Контакты такси"),
             Triple("⌖", "Полезные адреса", "Городские службы")
         ).forEach { item ->
-            nearbyRow.addView(iconTile(item.first, item.second, item.third) {
+            nearbyRow.addView(iconTile(item.first, item.second, "") {
                 showPage(item.second, "Сведения появятся после подключения справочника.")
-            }, LinearLayout.LayoutParams(dp(150), dp(112)).apply { rightMargin = dp(8) })
+            }, LinearLayout.LayoutParams(dp(90), dp(72)).apply { rightMargin = dp(5) })
         }
         nearbyScroll.addView(nearbyRow)
         content.addView(nearbyScroll)
