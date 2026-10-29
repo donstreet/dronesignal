@@ -32,7 +32,6 @@ jobs:
           path: new-app/ingestion/ingestion-tests.log
           if-no-files-found: warn
   apk:
-    # Android builds independently: ingestion test failures must not suppress APK diagnostics.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -40,11 +39,27 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Use preinstalled Android SDK
+      - name: Locate Android SDK and sdkmanager
+        shell: bash
         run: |
-          echo "ANDROID_HOME=${ANDROID_HOME:-/usr/local/lib/android/sdk}" >> "$GITHUB_ENV"
-          echo "ANDROID_SDK_ROOT=${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}" >> "$GITHUB_ENV"
-          test -x "${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools/16.0/bin/sdkmanager"
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          if [ ! -d "$SDK_ROOT" ]; then
+            for candidate in /usr/local/lib/android/sdk /opt/android-sdk /usr/lib/android-sdk; do
+              if [ -d "$candidate" ]; then SDK_ROOT="$candidate"; break; fi
+            done
+          fi
+          SDKMANAGER="$(find "$SDK_ROOT" -type f -name sdkmanager -perm /111 2>/dev/null | head -n 1 || true)"
+          if [ -z "$SDKMANAGER" ]; then
+            echo "sdkmanager was not found under $SDK_ROOT"
+            find /usr/local/lib/android /opt/android-sdk /usr/lib/android-sdk -type f -name sdkmanager 2>/dev/null | head -n 30 || true
+            exit 1
+          fi
+          SDK_BIN="$(dirname "$SDKMANAGER")"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "$SDK_BIN" >> "$GITHUB_PATH"
+          echo "Found sdkmanager: $SDKMANAGER"
       - name: Install required Android SDK
         run: sdkmanager --install 'platforms;android-35' 'build-tools;35.0.0'
       - uses: gradle/actions/setup-gradle@v4
