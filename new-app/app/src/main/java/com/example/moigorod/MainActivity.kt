@@ -58,7 +58,7 @@ class MainActivity : Activity() {
         val scroll = ScrollView(this).apply { setBackgroundColor(bg) }
         content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(20), dp(20), dp(28))
+            setPadding(dp(20), dp(20), dp(20), dp(10))
         }
         scroll.addView(content)
         setContentView(scroll)
@@ -296,7 +296,7 @@ class MainActivity : Activity() {
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
-            setPadding(0, dp(8), 0, dp(4))
+            setPadding(0, dp(2), 0, 0)
         }
         val items = listOf(
             Triple("⌂", "Главная", { showHome() }),
@@ -316,7 +316,7 @@ class MainActivity : Activity() {
             }
             row.addView(col, LinearLayout.LayoutParams(0, -2, 1f))
         }
-        content.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
+        content.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(4) })
     }
 
     private fun chooseCity() {
