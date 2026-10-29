@@ -32,7 +32,7 @@ jobs:
           path: new-app/ingestion/ingestion-tests.log
           if-no-files-found: warn
   apk:
-    needs: ingestion-tests
+    # Android builds independently: ingestion test failures must not suppress APK diagnostics.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
