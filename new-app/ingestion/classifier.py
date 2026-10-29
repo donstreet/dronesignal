@@ -1,6 +1,7 @@
-"""Conservative parsing of utility schedules from user-approved channel posts.
+"""Conservative classifier for public utility and municipal posts.
 
-This module does not fetch Telegram/MAX or declare a schedule currently active.
+Classifications are suggestions only. No post is a live outage or public announcement
+until a human moderator verifies the city, status, date, and source.
 """
 from dataclasses import dataclass
 import re
@@ -8,7 +9,34 @@ import re
 WATER = ("вод", "водоснабж", "водовоз", "подвоз")
 POWER = ("электроэнерг", "электроснабж", "отключени", "свет", "электрич")
 FUEL = ("бензин", "дизел", "топлив", "азс")
-CITIES = ("Макеевка", "Донецк")
+
+# Canonical city labels and common spellings. This is deliberately a text match,
+# not an inference from which channel published the post.
+CITY_ALIASES = {
+    "Донецк": ("донецк",),
+    "Макеевка": ("макеевк",),
+    "Дебальцево": ("дебальцев",),
+    "Докучаевск": ("докучаевск",),
+    "Горловка": ("горловк",),
+    "Енакиево": ("енак",),
+    "Иловайск": ("иловайск",),
+    "Мариуполь": ("мариупол",),
+    "Снежное": ("снежн",),
+    "Торез": ("торез", "чистяково"),
+    "Харцызск": ("харцызск",),
+    "Амвросиевка": ("амвросиев",),
+    "Волноваха": ("волновах",),
+    "Шахтёрск": ("шахтерск", "шахтёрск"),
+    "Новоазовск": ("новоазовск",),
+    "Тельманово": ("тельманов",),
+    "Старобешево": ("старобешев",),
+    "Володарское": ("володарск",),
+    "Мангуш": ("мангуш",),
+    "Ждановка": ("ждановк",),
+    "Кировское": ("кировск", "крестовк"),
+    "Ясиноватая": ("ясиноват",),
+    "Красный Лиман": ("красн\u044bй лиман", "краснолиман"),
+}
 
 @dataclass(frozen=True)
 class ParsedPost:
@@ -34,7 +62,12 @@ def parse_post(text: str, source_url: str) -> ParsedPost:
         category = "mixed_utilities"
     else:
         category = "news"
-    cities = tuple(c for c in CITIES if c.casefold() in lower)
+    normalized_aliases = {
+        city: tuple(alias.replace("ё", "е") for alias in aliases)
+        for city, aliases in CITY_ALIASES.items()
+    }
+    cities = tuple(city for city, aliases in normalized_aliases.items()
+                   if any(alias in lower for alias in aliases))
     if "подвоз" in lower or "водовоз" in lower:
         kind = "delivery"
     elif "восстанов" in lower or "возобновлен" in lower:
@@ -45,7 +78,7 @@ def parse_post(text: str, source_url: str) -> ParsedPost:
         kind = "outage_notice"
     else:
         kind = "general"
-    # No automatic 'active outage' without unambiguous city, date and source.
     has_date = bool(re.search(r"\b\d{1,2}[./-]\d{1,2}(?:[./-]\d{2,4})?\b", lower))
+    # General news, ambiguous city scope, and every municipal announcement require review.
     requires_review = not (len(cities) == 1 and has_date and category in ("water", "electricity"))
     return ParsedPost(category, cities, kind, requires_review, source_url, text)
