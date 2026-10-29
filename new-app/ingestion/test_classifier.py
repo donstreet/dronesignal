@@ -22,6 +22,12 @@ class ClassifierTests(unittest.TestCase):
         self.assertEqual(post.category, "fuel")
         self.assertTrue(post.requires_review)
 
+    def test_municipal_city_aliases_are_detected_but_news_stays_in_review(self):
+        post = parse_post("Администрация Горловки сообщает о ремонте дороги", "https://t.me/Gorlowka_now/12")
+        self.assertEqual(post.category, "news")
+        self.assertEqual(post.cities, ("Горловка",))
+        self.assertTrue(post.requires_review)
+
     def test_two_cities_need_review(self):
         post = parse_post("Макеевка и Донецк график отключения света 29.10", "https://t.me/x/1")
         self.assertTrue(post.requires_review)
