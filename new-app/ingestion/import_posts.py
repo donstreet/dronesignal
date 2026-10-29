@@ -36,7 +36,7 @@ def validate(payload):
             raise ValueError("Unknown classification")
         if not isinstance(p.get("text"), str) or not p["text"].strip() or len(p["text"]) > 30000:
             raise ValueError("Invalid text")
-        if not isinstance(p.get("cities"), list) or not all(isinstance(c, str) and len(c) <= 100 for c in p["cities"]):
+        if p.get("requires_review") is not True and p.get("requires_review") is not False:\n            raise ValueError("Invalid review flag")\n        if p.get("published_at") is not None:\n            from datetime import datetime\n            try:\n                date = datetime.fromisoformat(p["published_at"])\n                if date.tzinfo is None or date.utcoffset() is None:\n                    raise ValueError("Missing timezone")\n            except (TypeError, ValueError) as exc:\n                raise ValueError("Invalid publication timestamp") from exc\n        if not isinstance(p.get("cities"), list) or not all(isinstance(c, str) and len(c) <= 100 for c in p["cities"]):
             raise ValueError("Invalid cities")
         checked.append(p)
     return checked
