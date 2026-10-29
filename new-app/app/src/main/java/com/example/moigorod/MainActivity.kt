@@ -800,15 +800,82 @@ class MainActivity : Activity() {
         shell("💧 Вода")
         content.addView(text("Город: $city", 17f, Color.WHITE, true))
         if (city == "Выберите город") {
-            card("Выберите город", "Информация о водоснабжении привязана к населённому пункту.")
+            card("Выберите город", "Информация об отключениях привязана к населённому пункту.")
             content.addView(button("Выбрать город") { chooseCity() })
         } else {
-            card("Актуальность сведений", "Подтверждённые данные о водоснабжении пока не подключены. Отсутствие сообщений не означает отсутствие отключений.")
-            card("Аварийные отключения", "Подтверждённых сведений пока нет.")
-            card("Плановые работы", "Расписание пока не загружено.")
-            content.addView(text("Адреса, график подачи и ожидаемое восстановление появятся после подключения проверенного источника.", 14f, muted))
-            content.addView(button("Обновить сведения") { showWater() })
-            content.addView(button("Изменить город") { chooseCity() })
+            card("Актуальность сведений", "Проверяем опубликованные сообщения. Нет данных — не значит, что отключений нет.")
+            val status = text("Загрузка сведений…", 15f, muted)
+            content.addView(status)
+            val entries = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+            content.addView(entries)
+            fun load() {
+                status.text = "Загрузка сведений…"
+                entries.removeAllViews()
+                val selectedCity = city
+                Thread {
+                    val outcome = try {
+                        // Set the verified HTTPS production API base URL before enabling live data.
+                        val base = getPreferences(MODE_PRIVATE).getString("electricity_api_base", "").orEmpty()
+                        require(base.startsWith("https://")) { "Источник данных пока не подключён." }
+                        val url = java.net.URL(base.trimEnd('/') + "/api/outages?kind=water&city=" +
+                            java.net.URLEncoder.encode(selectedCity, "UTF-8"))
+                        val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
+                            connectTimeout = 8000
+                            readTimeout = 8000
+                            setRequestProperty("Accept", "application/json")
+                        }
+                        try {
+                            require(conn.responseCode == 200) { "Сервер временно недоступен." }
+                            val raw = conn.inputStream.bufferedReader().use { it.readText() }
+                            val json = org.json.JSONObject(raw)
+                            val rows = json.getJSONArray("outages")
+                            val accepted = mutableListOf<org.json.JSONObject>()
+                            for (i in 0 until rows.length()) {
+                                val item = rows.getJSONObject(i)
+                                if (item.optString("city") == selectedCity &&
+                                    item.optString("kind") == "water" &&
+                                    item.optString("verification") == "confirmed" &&
+                                    item.optString("source").isNotBlank() &&
+                                    item.optString("published_at").isNotBlank()) accepted.add(item)
+                            }
+                            accepted
+                        } finally { conn.disconnect() }
+                    } catch (e: Exception) { e }
+                    runOnUiThread {
+                        if (currentPage != "water" || city != selectedCity) return@runOnUiThread
+                        when (outcome) {
+                            is Exception -> status.text = outcome.message ?: "Не удалось получить сведения."
+                            is List<*> -> {
+                                status.text = if (outcome.isEmpty()) "Подтверждённых сообщений пока нет. Это не означает отсутствие отключений." else "Подтверждённые сообщения:"
+                                outcome.filterIsInstance<org.json.JSONObject>().forEach { item ->
+                                    val state = when (item.optString("status")) {
+                                        "planned" -> "Плановые работы"
+                                        "active" -> "Аварийное отключение"
+                                        "restored" -> "Водоснабжение восстановлено (по данным источника)"
+                                        else -> "Статус уточняется"
+                                    }
+                                    val addressArray = item.optJSONArray("addresses")
+                                    val addresses = if (addressArray == null) "Адреса уточняются" else
+                                        (0 until addressArray.length()).joinToString(", ") { addressArray.optString(it) }.ifBlank { "Адреса уточняются" }
+                                    val restore = item.optString("expected_restore_at").ifBlank { "не указано" }
+                                    val panel = LinearLayout(this).apply {
+                                        orientation = LinearLayout.VERTICAL
+                                        setPadding(dp(16), dp(12), dp(16), dp(12))
+                                        background = outlinedPanel()
+                                        addView(text(state, 18f, Color.WHITE, true))
+                                        addView(text(addresses, 15f, muted))
+                                        addView(text("Ожидаемое восстановление: $restore", 14f, muted))
+                                        addView(text("Источник: ${item.optString("source")} · ${item.optString("published_at")}", 12f, muted))
+                                    }
+                                    entries.addView(panel, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
+                                }
+                            }
+                        }
+                    }
+                }.start()
+            }
+            content.addView(button("Обновить сведения") { load() })
+            load()
         }
         content.addView(button("← На главную") { showHome() })
     }
