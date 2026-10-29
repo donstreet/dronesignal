@@ -1,7 +1,8 @@
-"""Persist fetched public posts for moderation/API import, without publishing them as live outages.
+"""Export fetched Telegram posts into moderation staging, never live publication.
 
-Usage: python3 export_posts.py --output /path/to/review-posts.json
-Exit nonzero on source errors; preserve the previous snapshot on failure.
+Partial success is allowed when at least one source produced posts; failed sources are
+recorded in the snapshot. If all sources fail or no posts are available, keep the previous
+snapshot unchanged.
 """
 import argparse
 import json
@@ -13,16 +14,20 @@ from telegram_fetch import collect
 
 def export(output: Path, collector=collect):
     result = collector()
-    if result["errors"]:
-        raise RuntimeError("Source fetch failed: " + ", ".join(sorted(result["errors"])))
-    if not result["posts"]:
+    posts = result.get("posts", [])
+    errors = result.get("errors", {})
+    if errors and not posts:
+        raise RuntimeError("Source fetch failed: " + ", ".join(sorted(errors)))
+    if not posts:
         raise RuntimeError("No posts fetched; retaining last successful snapshot")
     payload = {
         "schema_version": 1,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "review_required": True,
         "publication_status": "draft",
-        "posts": result["posts"],
+        "source_errors": errors,
+        "partial_source_failure": bool(errors),
+        "posts": posts,
     }
     output.parent.mkdir(parents=True, exist_ok=True)
     name = None
@@ -38,7 +43,7 @@ def export(output: Path, collector=collect):
     finally:
         if name and os.path.exists(name):
             os.unlink(name)
-    return len(result["posts"])
+    return len(posts)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
