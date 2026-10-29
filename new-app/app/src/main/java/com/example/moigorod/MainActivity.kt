@@ -263,7 +263,7 @@ class MainActivity : Activity() {
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         items.forEach { item ->
             val tile = iconTile(item.first, item.second, "") {
-                if (item.second == "Свет") { showElectricity() } else showPage(item.second, when (item.second) {
+                if (item.second == "Свет") { showElectricity() } else if (item.second == "Вода") { showWater() } else showPage(item.second, when (item.second) {
                     "Свет" -> "Данные об отключениях пока не загружены."
                     "Вода" -> "Данные о водоснабжении пока не загружены."
                     "Топливо" -> "Данные о наличии топлива пока не загружены."
@@ -626,7 +626,11 @@ class MainActivity : Activity() {
             city = visible[position]
             getPreferences(MODE_PRIVATE).edit().putString("city", city).apply()
             dialog.dismiss()
-            if (currentPage == "electricity") showElectricity() else showHome()
+            when (currentPage) {
+                "electricity" -> showElectricity()
+                "water" -> showWater()
+                else -> showHome()
+            }
         }
         search.addTextChangedListener(object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -785,6 +789,24 @@ class MainActivity : Activity() {
             }
             content.addView(button("Обновить сведения") { load() })
             load()
+        }
+        content.addView(button("← На главную") { showHome() })
+    }
+
+    private fun showWater() {
+        currentPage = "water"
+        shell("💧 Вода")
+        content.addView(text("Город: $city", 17f, Color.WHITE, true))
+        if (city == "Выберите город") {
+            card("Выберите город", "Информация о водоснабжении привязана к населённому пункту.")
+            content.addView(button("Выбрать город") { chooseCity() })
+        } else {
+            card("Актуальность сведений", "Подтверждённые данные о водоснабжении пока не подключены. Отсутствие сообщений не означает отсутствие отключений.")
+            card("Аварийные отключения", "Подтверждённых сведений пока нет.")
+            card("Плановые работы", "Расписание пока не загружено.")
+            content.addView(text("Адреса, график подачи и ожидаемое восстановление появятся после подключения проверенного источника.", 14f, muted))
+            content.addView(button("Обновить сведения") { showWater() })
+            content.addView(button("Изменить город") { chooseCity() })
         }
         content.addView(button("← На главную") { showHome() })
     }
