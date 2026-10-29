@@ -181,20 +181,32 @@ class MainActivity : Activity() {
         val panel = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(16), dp(14), dp(16), dp(14))
-            background = android.graphics.drawable.GradientDrawable(
-                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(Color.rgb(200, 36, 28), accent)
-            ).apply { cornerRadius = dp(18).toFloat() }
+            setPadding(dp(12), dp(10), dp(14), dp(10))
+            background = outlinedPanel()
             setOnClickListener { showSos() }
             isClickable = true
         }
-        panel.addView(text("🆘", 30f, Color.WHITE, true))
-        val words = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(12), 0, 0, 0) }
-        words.addView(text("SOS 112", 23f, Color.WHITE, true))
-        words.addView(text("Экстренный вызов", 14f, Color.WHITE))
+        val sosCircle = TextView(this).apply {
+            text = "SOS"
+            textSize = 16f
+            setTypeface(null, Typeface.BOLD)
+            gravity = Gravity.CENTER
+            setTextColor(Color.WHITE)
+            background = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.OVAL
+                setColor(accent)
+                setStroke(dp(2), Color.rgb(255, 125, 105))
+            }
+        }
+        panel.addView(sosCircle, LinearLayout.LayoutParams(dp(62), dp(62)))
+        val words = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(14), 0, 0, 0)
+        }
+        words.addView(text("112", 24f, Color.WHITE, true))
+        words.addView(text("Экстренная помощь", 14f, muted))
         panel.addView(words, LinearLayout.LayoutParams(0, -2, 1f))
-        panel.addView(text("›", 30f, Color.WHITE, true))
+        panel.addView(text("›", 28f, accent, true))
         content.addView(panel, LinearLayout.LayoutParams(-1, -2).apply {
             topMargin = dp(8); bottomMargin = dp(10)
         })
