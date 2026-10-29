@@ -97,11 +97,23 @@ class MainActivity : Activity() {
         LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(10), dp(12), dp(8), dp(12))
+            setPadding(dp(10), dp(8), dp(8), dp(8))
             background = outlinedPanel()
-            addView(text(icon, 25f, Color.WHITE, true))
-            addView(text(label, 14f, Color.WHITE, true))
-            addView(text(description, 11f, muted))
+            fun cleanLine(value: String, size: Float, color: Int, bold: Boolean = false) =
+                TextView(this@MainActivity).apply {
+                    text = value
+                    textSize = size
+                    setTextColor(color)
+                    if (bold) setTypeface(null, Typeface.BOLD)
+                    setPadding(0, 0, 0, 0)
+                    includeFontPadding = false
+                    gravity = Gravity.CENTER_VERTICAL
+                }
+            addView(cleanLine(icon, 25f, Color.WHITE, true), LinearLayout.LayoutParams(-1, dp(32)))
+            addView(cleanLine(label, 14f, Color.WHITE, true), LinearLayout.LayoutParams(-1, dp(24)))
+            if (description.isNotBlank()) {
+                addView(cleanLine(description, 11f, muted), LinearLayout.LayoutParams(-1, dp(20)))
+            }
             setOnClickListener { action() }
             isClickable = true
         }
@@ -116,7 +128,7 @@ class MainActivity : Activity() {
         )
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         items.forEach { item ->
-            val tile = iconTile(item.first, item.second, item.third) {
+            val tile = iconTile(item.first, item.second, "") {
                 showPage(item.second, when (item.second) {
                     "Свет" -> "Данные об отключениях пока не загружены."
                     "Вода" -> "Данные о водоснабжении пока не загружены."
@@ -124,11 +136,10 @@ class MainActivity : Activity() {
                     else -> "Новости пока не загружены."
                 })
             }.apply {
-                setPadding(dp(4), dp(5), dp(4), dp(5))
-                gravity = Gravity.CENTER
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(8), dp(7), dp(5), dp(7))
             }
-            tile.findViewWithTag<TextView>("unused")
-            row.addView(tile, LinearLayout.LayoutParams(0, dp(76), 1f).apply {
+            row.addView(tile, LinearLayout.LayoutParams(0, dp(72), 1f).apply {
                 rightMargin = dp(5)
             })
         }
@@ -373,8 +384,23 @@ class MainActivity : Activity() {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
                 setPadding(dp(2), dp(5), dp(2), dp(5))
-                addView(text(item.first, 23f, if (index == 0) accent else muted, true))
-                addView(text(item.second, 10f, if (index == 0) accent else muted))
+                addView(TextView(this@MainActivity).apply {
+                    text = item.first
+                    textSize = 23f
+                    setTextColor(if (index == 0) accent else muted)
+                    setTypeface(null, Typeface.BOLD)
+                    gravity = Gravity.CENTER
+                    setPadding(0, 0, 0, 0)
+                    includeFontPadding = false
+                }, LinearLayout.LayoutParams(-1, dp(30)))
+                addView(TextView(this@MainActivity).apply {
+                    text = item.second
+                    textSize = 10f
+                    setTextColor(if (index == 0) accent else muted)
+                    gravity = Gravity.CENTER
+                    setPadding(0, 0, 0, 0)
+                    includeFontPadding = false
+                }, LinearLayout.LayoutParams(-1, dp(18)))
                 setOnClickListener { item.third() }
                 isClickable = true
             }
