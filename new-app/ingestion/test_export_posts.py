@@ -22,6 +22,17 @@ class ExportTests(unittest.TestCase):
                 export(target, lambda: {"posts": [], "errors": {"voda_dnr": "timeout"}})
             self.assertEqual(target.read_text(encoding="utf-8"), "previous")
 
+    def test_partial_fetch_saves_posts_and_source_errors(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "posts.json"
+            result = {"posts": [{"source_id": "donetsk_admin", "post_id": "7"}],
+                      "errors": {"mariupol_admin": "timeout"}}
+            self.assertEqual(export(target, lambda: result), 1)
+            payload = json.loads(target.read_text(encoding="utf-8"))
+            self.assertTrue(payload["partial_source_failure"])
+            self.assertEqual(payload["source_errors"]["mariupol_admin"], "timeout")
+            self.assertEqual(payload["publication_status"], "draft")
+
     def test_empty_fetch_does_not_erase_snapshot(self):
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "posts.json"
