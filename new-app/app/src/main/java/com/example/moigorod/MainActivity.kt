@@ -905,13 +905,82 @@ class MainActivity : Activity() {
     private fun showNews() {
         currentPage = "news"
         shell("▤ Новости")
-        card("Общая новостная лента", "Новости из одного проверенного MAX-канала будут доступны независимо от выбранного города.")
-        card("Источник: Вести в MAX", "Открыть оригинальные публикации канала.", {
-            startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://max.ru/vesti")))
-        })
-        card("Актуальность", "Автоматическая загрузка публикаций пока не подключена. Читать новости можно по ссылке на источник.")
-        content.addView(text("После подключения источника здесь будут заголовок, краткий текст, дата публикации и ссылка на оригинал.", 14f, muted))
-        content.addView(button("Обновить ленту") { showNews() })
+        content.addView(text("Город: $city", 17f, Color.WHITE, true))
+        if (city == "Выберите город") {
+            card("Сначала выберите город", "Лента новостей привязана к выбранному населённому пункту.")
+            content.addView(button("Выбрать город") { chooseCity() })
+        } else {
+            card("Проверенные публикации", "Показываем только сообщения, прошедшие проверку. Пустая лента не означает, что в городе ничего не происходит.")
+            val status = text("Загрузка новостей…", 15f, muted)
+            content.addView(status)
+            val entries = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+            content.addView(entries)
+            fun load() {
+                status.text = "Загрузка новостей…"
+                entries.removeAllViews()
+                val selectedCity = city
+                Thread {
+                    val outcome = try {
+                        val base = getPreferences(MODE_PRIVATE).getString("utility_api_base", "").orEmpty()
+                        require(base.startsWith("https://")) { "Источник новостей пока не подключён." }
+                        val url = java.net.URL(base.trimEnd('/') + "/api/news?city=" +
+                            java.net.URLEncoder.encode(selectedCity, "UTF-8") + "&limit=20")
+                        val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
+                            connectTimeout = 8000
+                            readTimeout = 8000
+                            setRequestProperty("Accept", "application/json")
+                        }
+                        try {
+                            require(conn.responseCode == 200) { "Сервер новостей временно недоступен." }
+                            val json = org.json.JSONObject(conn.inputStream.bufferedReader().use { it.readText() })
+                            val rows = json.getJSONArray("items")
+                            val accepted = mutableListOf<org.json.JSONObject>()
+                            for (i in 0 until rows.length()) {
+                                val item = rows.getJSONObject(i)
+                                val sourceUrl = item.optString("source_url")
+                                if (item.optString("city") == selectedCity &&
+                                    item.optString("verification") == "confirmed" &&
+                                    sourceUrl.startsWith("https://") &&
+                                    item.optString("title").isNotBlank() &&
+                                    item.optString("published_at").isNotBlank()) accepted.add(item)
+                            }
+                            accepted
+                        } finally { conn.disconnect() }
+                    } catch (e: Exception) { e }
+                    runOnUiThread {
+                        if (currentPage != "news" || city != selectedCity) return@runOnUiThread
+                        when (outcome) {
+                            is Exception -> status.text = outcome.message ?: "Не удалось получить новости."
+                            is List<*> -> {
+                                val news = outcome.filterIsInstance<org.json.JSONObject>()
+                                status.text = if (news.isEmpty()) "Подтверждённых публикаций пока нет." else "Публикации: ${news.size}"
+                                news.forEach { item ->
+                                    val panel = LinearLayout(this).apply {
+                                        orientation = LinearLayout.VERTICAL
+                                        setPadding(dp(16), dp(12), dp(16), dp(12))
+                                        background = outlinedPanel()
+                                        addView(text(item.optString("title"), 17f, Color.WHITE, true))
+                                        addView(text(item.optString("summary"), 15f, muted))
+                                        addView(text(item.optString("source") + " · " + item.optString("published_at"), 12f, muted))
+                                        addView(button("Открыть оригинал") {
+                                            startActivity(android.content.Intent(
+                                                android.content.Intent.ACTION_VIEW,
+                                                android.net.Uri.parse(item.optString("source_url"))
+                                            ))
+                                        })
+                                    }
+                                    val params = LinearLayout.LayoutParams(-1, -2)
+                                    params.bottomMargin = dp(8)
+                                    entries.addView(panel, params)
+                                }
+                            }
+                        }
+                    }
+                }.start()
+            }
+            load()
+            content.addView(button("Обновить ленту") { load() })
+        }
         content.addView(button("← На главную") { showHome() })
     }
 
