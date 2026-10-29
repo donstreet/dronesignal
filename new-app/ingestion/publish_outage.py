@@ -47,7 +47,7 @@ def publish(review_db, public_db, source_id, post_id, city, status, addresses,
              source,source_url,published_at,verified_at,visible)
             VALUES (?,?,?,?,?,?,?,?,?,?,?,1)
             ON CONFLICT(id) DO NOTHING""",
-            (source_id + ":" + post_id, row["category"], city, "confirmed", status,
+            (source_id + ":" + post_id + ":" + city, row["category"], city, "confirmed", status,
              json.dumps(addresses, ensure_ascii=False), None, source_name,
              row["source_url"], row["published_at"], verified_at))
         return db.total_changes == 1
