@@ -107,20 +107,29 @@ class MainActivity : Activity() {
         }
 
     private fun featureStrip() {
-        val scroller = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
-        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        // Компактная сетка 2×2: все городские разделы видны сразу, без горизонтальной карусели.
         val items = listOf(
             Triple("⚡", "Свет", "Отключения") to { showPage("Свет", "Данные пока не загружены.") },
             Triple("💧", "Вода", "Водоснабжение") to { showPage("Вода", "Данные пока не загружены.") },
             Triple("⛽", "Топливо", "Наличие") to { showPage("Топливо", "Данные пока не загружены.") },
             Triple("▤", "Новости", "Городская лента") to { showPage("Новости", "Новости пока не загружены.") }
         )
-        items.forEach { item ->
-            row.addView(iconTile(item.first.first, item.first.second, item.first.third, item.second),
-                LinearLayout.LayoutParams(dp(112), dp(112)).apply { rightMargin = dp(8) })
+        val grid = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        items.chunked(2).forEach { pair ->
+            val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+            pair.forEach { item ->
+                val tile = iconTile(item.first.first, item.first.second, item.first.third, item.second).apply {
+                    setPadding(dp(10), dp(5), dp(8), dp(5))
+                }
+                row.addView(tile, LinearLayout.LayoutParams(0, dp(82), 1f).apply {
+                    if (item !== pair.first()) {}
+                    rightMargin = dp(6)
+                    bottomMargin = dp(6)
+                })
+            }
+            grid.addView(row, LinearLayout.LayoutParams(-1, -2))
         }
-        scroller.addView(row)
-        content.addView(scroller, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(6) })
+        content.addView(grid, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(4) })
     }
 
     private fun header() {
