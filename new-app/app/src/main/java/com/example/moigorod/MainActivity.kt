@@ -214,24 +214,44 @@ class MainActivity : Activity() {
         currentPage = "home"
         shell("МОЙ ГОРОД")
         content.addView(button("📍 $city  ▾") { chooseCity() })
-        card("Объявления", "Публикаций пока нет. Обновления появятся после подключения сервера.")
-        card("Статус опасности неизвестен", "Нет подтверждённых актуальных данных. Это не означает отсутствие опасности.") {
-            showPage("Опасности", "Нет подтверждённых актуальных данных.")
+        card("Рекламные объявления", "Баннеры партнёров и городские объявления. Данные появятся после подключения сервера.")
+        card("SOS 112", "Экстренная помощь · звонок или сообщение близким") { showSos() }
+        content.addView(text("Городские разделы", 21f, Color.WHITE, true))
+        navigationRow(
+            Triple("⚡ Свет", "Отключения", { showPage("Свет", "Данные пока не загружены.") }),
+            Triple("💧 Вода", "Водоснабжение", { showPage("Вода", "Данные пока не загружены.") })
+        )
+        navigationRow(
+            Triple("⛽ Топливо", "Наличие", { showPage("Топливо", "Данные пока не загружены.") }),
+            Triple("▤ Новости", "Городская лента", { showPage("Новости", "Новости пока не загружены.") })
+        )
+        card("Онлайн-чат", "Написать в поддержку") {
+            showPage("Онлайн-чат", "Подключение к чату будет доступно после настройки сервера.")
         }
-        content.addView(text("Разделы", 21f, Color.WHITE, true))
+        content.addView(text("Полезное рядом  →", 21f, Color.WHITE, true))
+        val nearbyScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
+        val nearbyRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        listOf(
+            "Аптеки" to "Справочник аптек",
+            "Такси" to "Контакты такси",
+            "Полезные адреса" to "Городские службы"
+        ).forEach { (name, detail) ->
+            val tile = navigationTile(name, detail) {
+                showPage(name, "Сведения появятся после подключения справочника.")
+            }
+            nearbyRow.addView(tile, LinearLayout.LayoutParams(dp(165), -2).apply { rightMargin = dp(8) })
+        }
+        nearbyScroll.addView(nearbyRow)
+        content.addView(nearbyScroll)
+        content.addView(text("Навигация", 16f, muted))
         navigationRow(
-            Triple("⚠ Опасности", "Оповещения", { showPage("Опасности", "Нет подтверждённых актуальных данных.") }),
-            Triple("⚡ Свет", "Отключения", { showPage("Свет", "Информация об отключениях пока не загружена.") })
+            Triple("Главная", "Главный экран", { showHome() }),
+            Triple("Карта", "Город", { showPage("Карта", "Карта пока не подключена.") })
         )
         navigationRow(
-            Triple("💧 Вода", "Водоснабжение", { showPage("Вода", "Информация об отключениях пока не загружена.") }),
-            Triple("⛽ Топливо", "Наличие", { showPage("Топливо", "Данные о наличии топлива пока не загружены.") })
+            Triple("Опасности", "Оповещения", { showPage("Опасности", "Нет подтверждённых актуальных данных. Это не означает отсутствие опасности.") }),
+            Triple("Ещё", "Другие разделы", { showPage("Ещё", "Дополнительные сервисы.") })
         )
-        navigationRow(
-            Triple("▤ Новости", "Городская лента", { showPage("Новости", "Новости пока не загружены.") }),
-            Triple("☏ Чат", "Общение", { showPage("Чат", "Вход по подтверждённому номеру телефона будет доступен после подключения сервера.") })
-        )
-        content.addView(button("SOS · Экстренная помощь") { showSos() })
     }
 
     private fun showPage(title: String, description: String) {
@@ -254,6 +274,16 @@ class MainActivity : Activity() {
                 .setPositiveButton("Открыть") { _, _ ->
                     startActivity(android.content.Intent(android.content.Intent.ACTION_DIAL,
                         android.net.Uri.parse("tel:112")))
+                }.show()
+        })
+        content.addView(button("Сообщить близким") {
+            android.app.AlertDialog.Builder(this)
+                .setTitle("Сообщение близким")
+                .setMessage("Откроется приложение сообщений. Выберите получателя и подтвердите отправку самостоятельно. Геолокация не передаётся без разрешения.")
+                .setNegativeButton("Отмена", null)
+                .setPositiveButton("Продолжить") { _, _ ->
+                    startActivity(android.content.Intent(android.content.Intent.ACTION_SENDTO,
+                        android.net.Uri.parse("smsto:")).putExtra("sms_body", "Мне нужна помощь. Пожалуйста, свяжитесь со мной."))
                 }.show()
         })
         content.addView(button("← На главную") { showHome() })
