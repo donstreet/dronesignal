@@ -182,11 +182,13 @@ class MainActivity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(14), dp(12), dp(14), dp(12))
-            background = android.graphics.drawable.GradientDrawable().apply {
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(Color.rgb(48, 30, 32), Color.rgb(34, 35, 39))
+            ).apply {
                 shape = android.graphics.drawable.GradientDrawable.RECTANGLE
                 cornerRadius = dp(24).toFloat()
-                setColor(Color.rgb(34, 35, 39))
-                setStroke(dp(1), Color.rgb(198, 61, 43))
+                setStroke(dp(1), Color.rgb(155, 55, 45))
             }
             setOnClickListener { showSos() }
             isClickable = true
@@ -200,8 +202,8 @@ class MainActivity : Activity() {
             background = android.graphics.drawable.GradientDrawable().apply {
                 shape = android.graphics.drawable.GradientDrawable.RECTANGLE
                 cornerRadius = dp(9).toFloat()
-                setColor(Color.rgb(205, 43, 51))
-                setStroke(dp(1), Color.rgb(238, 104, 103))
+                setColor(Color.rgb(171, 42, 47))
+                setStroke(dp(1), Color.rgb(203, 76, 70))
             }
         }
         panel.addView(sosBadge, LinearLayout.LayoutParams(dp(48), dp(48)))
@@ -215,6 +217,57 @@ class MainActivity : Activity() {
         panel.addView(text("›", 28f, Color.WHITE, true))
         content.addView(panel, LinearLayout.LayoutParams(-1, -2).apply {
             topMargin = dp(8); bottomMargin = dp(10)
+        })
+    }
+ 
+    private fun chatPanel() {
+        val panel = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(14), dp(12), dp(14), dp(12))
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(Color.rgb(43, 29, 32), Color.rgb(34, 35, 39))
+            ).apply {
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                cornerRadius = dp(22).toFloat()
+                setStroke(dp(1), Color.rgb(142, 54, 45))
+            }
+            setOnClickListener { showCommunityChat() }
+            isClickable = true
+        }
+        val chatBadge = TextView(this).apply {
+            text = "•••"
+            textSize = 17f
+            setTypeface(null, Typeface.BOLD)
+            gravity = Gravity.CENTER
+            setTextColor(Color.rgb(232, 218, 218))
+            background = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                cornerRadius = dp(14).toFloat()
+                setColor(Color.rgb(54, 42, 45))
+                setStroke(dp(1), Color.rgb(126, 55, 49))
+            }
+        }
+        panel.addView(chatBadge, LinearLayout.LayoutParams(dp(44), dp(44)))
+        val words = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(12), 0, 0, 0)
+        }
+        words.addView(text("Онлайн-чат", 18f, Color.WHITE, true))
+        words.addView(text("Общайтесь, задавайте вопросы,", 12f, muted))
+        words.addView(text("получайте помощь", 12f, muted))
+        val mod = TextView(this).apply {
+            text = "🛡 Автомодератор"
+            textSize = 11f
+            setTextColor(Color.rgb(201, 125, 113))
+            setPadding(0, dp(4), 0, 0)
+        }
+        words.addView(mod)
+        panel.addView(words, LinearLayout.LayoutParams(0, -2, 1f))
+        panel.addView(text("›", 24f, Color.rgb(171, 77, 65), true))
+        content.addView(panel, LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(8); bottomMargin = dp(8)
         })
     }
 
@@ -376,7 +429,7 @@ class MainActivity : Activity() {
         sosPanel()
         content.addView(text("Городские разделы", 21f, Color.WHITE, true))
         featureStrip()
-        card("💬  Онлайн-чат", "Общение жителей города") { showCommunityChat() }
+        chatPanel()
         content.addView(text("Полезное рядом  →", 21f, Color.WHITE, true).apply {
             setPadding(0, dp(12), 0, dp(2))
         })
