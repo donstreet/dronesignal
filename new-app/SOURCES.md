@@ -21,3 +21,18 @@
 5. MAX подключать только после проверки доступного и разрешённого метода интеграции; не выдавать ссылки на каналы за рабочий API.
 6. Никакие новости о топливе/воде/свете не преобразовывать в сигнал опасности. Тревоги обрабатываются отдельным контуром.
 7. Для каждого пользовательского уведомления сохранять ссылку на первоисточник и время проверки.
+
+
+## Verified municipal and utility source candidates (2026-10-29)
+
+Scope: electricity and water reports for Donetsk and Makeevka. These are discovery links, **not** an implemented ingestion connection. Verify the technical and legal access method before automatic collection. Keep publication URL, source, timestamp, municipality, district/address, moderation status; only confirmed geographically relevant items enter public outages.
+
+- Donetsk municipal administration Telegram: https://t.me/gorodDonetsk ; city head Telegram: https://t.me/kulemzin_donetsk ; city head MAX: https://max.ru/kulemzin_donetsk
+- Makeevka municipal administration Telegram: https://t.me/Novosti_Makeevka ; municipal MAX: https://max.ru/makeevka_ru
+- Makeevka district administration MAX channels: Kirovsky https://max.ru/id9311026128_gos ; Chervonogvardeysky https://max.ru/id9311026110_gos ; Central-City https://max.ru/id9311026093_gos ; Gornyatsky https://max.ru/id9311026103_gos ; Sovetsky https://max.ru/id9311026086_gos
+- Water Donbassa (utility): official website https://vodadonbassa.ru/ ; MAX https://max.ru/vodadonbassa
+- Ministry of Construction DNR: Telegram https://t.me/minstroydnr ; MAX https://max.ru/minstroydnr
+
+Verification evidence: https://dontimes.ru/oficzialnye-resursy-municzipalnyh-obrazovanij-doneczkoj-narodnoj-respubliki-v-soczialnyh-setyah/ ; https://t.me/s/Novosti_Makeevka?after=88901 ; https://news-donetsk.ru/economy/2026/10/22/495765.html . For additional cities, use the official administration directory, verify each account before enabling.
+
+Fuel: single shared feed for Donetsk and Makeevka only. Do not fabricate station availability, prices or queues. For other selected cities show scope notice, not city-specific fuel data.
