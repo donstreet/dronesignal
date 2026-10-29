@@ -137,13 +137,13 @@ class MainActivity : Activity() {
                 "🚕" -> Color.rgb(205, 139, 20)
                 "⌖" -> Color.rgb(26, 116, 211)
                 "chat" -> Color.rgb(244, 42, 76)
-                "city" -> Color.rgb(240, 24, 47)
+                "city", "pin" -> Color.rgb(240, 24, 47)
                 else -> surface
             }
             p.style = android.graphics.Paint.Style.FILL
             p.color = bgColor
-            if (key == "city") {
-                val pin = android.graphics.Path().apply {
+            if (key == "city" || key == "pin") {
+                val pinPath = android.graphics.Path().apply {
                     moveTo(cx, h * 0.96f)
                     cubicTo(w * 0.40f, h * 0.70f, w * 0.08f, h * 0.53f, w * 0.08f, h * 0.34f)
                     cubicTo(w * 0.08f, h * 0.10f, w * 0.30f, h * 0.02f, cx, h * 0.02f)
@@ -151,15 +151,19 @@ class MainActivity : Activity() {
                     cubicTo(w * 0.92f, h * 0.53f, w * 0.60f, h * 0.70f, cx, h * 0.96f)
                     close()
                 }
-                canvas.drawPath(pin, p)
+                canvas.drawPath(pinPath, p)
                 p.color = Color.WHITE
-                canvas.drawRect(w*.25f,h*.34f,w*.38f,h*.60f,p)
-                canvas.drawRect(w*.42f,h*.25f,w*.57f,h*.60f,p)
-                canvas.drawRect(w*.61f,h*.38f,w*.74f,h*.60f,p)
-                p.color = bgColor
-                canvas.drawRect(w*.29f,h*.40f,w*.33f,h*.45f,p)
-                canvas.drawRect(w*.46f,h*.32f,w*.50f,h*.37f,p)
-                canvas.drawRect(w*.65f,h*.43f,w*.69f,h*.48f,p)
+                if (key == "city") {
+                    canvas.drawRect(w*.25f,h*.34f,w*.38f,h*.60f,p)
+                    canvas.drawRect(w*.42f,h*.25f,w*.57f,h*.60f,p)
+                    canvas.drawRect(w*.61f,h*.38f,w*.74f,h*.60f,p)
+                    p.color = bgColor
+                    canvas.drawRect(w*.29f,h*.40f,w*.33f,h*.45f,p)
+                    canvas.drawRect(w*.46f,h*.32f,w*.50f,h*.37f,p)
+                    canvas.drawRect(w*.65f,h*.43f,w*.69f,h*.48f,p)
+                } else {
+                    canvas.drawCircle(cx, h * 0.34f, minOf(w, h) * 0.14f, p)
+                }
                 return
             }
             canvas.drawCircle(cx, cy, r, p)
@@ -224,6 +228,7 @@ class MainActivity : Activity() {
     }.apply { contentDescription = when(key) {
         "⚡" -> "Свет"; "💧" -> "Вода"; "⛽" -> "Топливо"; "▤" -> "Новости"
         "⚕" -> "Аптеки"; "🚕" -> "Такси"; "⌖" -> "Полезные адреса"; "city" -> "Мой город"; "chat" -> "Онлайн-чат"
+        "pin" -> "Выбор города"
         else -> key
     } }
 
@@ -672,7 +677,7 @@ class MainActivity : Activity() {
                 setStroke(dp(1), accent)
             }
         }
-        cityRow.addView(iconGraphic("city", 32), LinearLayout.LayoutParams(dp(38), dp(38)).apply {
+        cityRow.addView(iconGraphic("pin", 32), LinearLayout.LayoutParams(dp(38), dp(38)).apply {
             rightMargin = dp(10)
         })
         cityRow.addView(text(city, 16f, Color.WHITE, true), LinearLayout.LayoutParams(0, -2, 1f))
