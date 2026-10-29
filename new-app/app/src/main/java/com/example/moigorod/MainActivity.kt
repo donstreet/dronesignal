@@ -107,28 +107,32 @@ class MainActivity : Activity() {
         }
 
     private fun featureStrip() {
-        // Компактная сетка 2×2: все городские разделы видны сразу, без горизонтальной карусели.
+        // Все четыре городских раздела компактно в один ряд.
         val items = listOf(
-            Triple("⚡", "Свет", "Отключения") to { showPage("Свет", "Данные пока не загружены.") },
-            Triple("💧", "Вода", "Водоснабжение") to { showPage("Вода", "Данные пока не загружены.") },
-            Triple("⛽", "Топливо", "Наличие") to { showPage("Топливо", "Данные пока не загружены.") },
-            Triple("▤", "Новости", "Городская лента") to { showPage("Новости", "Новости пока не загружены.") }
+            Triple("⚡", "Свет", "Отключения"),
+            Triple("💧", "Вода", "Водоснабжение"),
+            Triple("⛽", "Топливо", "Наличие"),
+            Triple("▤", "Новости", "Городская лента")
         )
-        val grid = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        items.chunked(2).forEach { pair ->
-            val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-            pair.forEach { item ->
-                val tile = iconTile(item.first.first, item.first.second, item.first.third, item.second).apply {
-                    setPadding(dp(10), dp(5), dp(8), dp(5))
-                }
-                row.addView(tile, LinearLayout.LayoutParams(0, dp(82), 1f).apply {
-                    rightMargin = dp(6)
-                    bottomMargin = dp(6)
+        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        items.forEach { item ->
+            val tile = iconTile(item.first, item.second, item.third) {
+                showPage(item.second, when (item.second) {
+                    "Свет" -> "Данные об отключениях пока не загружены."
+                    "Вода" -> "Данные о водоснабжении пока не загружены."
+                    "Топливо" -> "Данные о наличии топлива пока не загружены."
+                    else -> "Новости пока не загружены."
                 })
+            }.apply {
+                setPadding(dp(4), dp(5), dp(4), dp(5))
+                gravity = Gravity.CENTER
             }
-            grid.addView(row, LinearLayout.LayoutParams(-1, -2))
+            tile.findViewWithTag<TextView>("unused")
+            row.addView(tile, LinearLayout.LayoutParams(0, dp(76), 1f).apply {
+                rightMargin = dp(5)
+            })
         }
-        content.addView(grid, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(4) })
+        content.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(4) })
     }
 
     private fun header() {
