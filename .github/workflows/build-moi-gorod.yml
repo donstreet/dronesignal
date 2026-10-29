@@ -16,7 +16,18 @@ jobs:
           python-version: '3.12'
       - name: Test content classifier and Telegram preview parser
         working-directory: new-app/ingestion
-        run: python -m unittest discover -v
+        run: |
+          set -o pipefail
+          python -m unittest discover -v 2>&1 | tee ingestion-tests.log
+        env:
+          PYTHONUNBUFFERED: '1'
+      - name: Upload ingestion test log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ingestion-test-log
+          path: new-app/ingestion/ingestion-tests.log
+          if-no-files-found: warn
   apk:
     needs: ingestion-tests
     runs-on: ubuntu-latest
