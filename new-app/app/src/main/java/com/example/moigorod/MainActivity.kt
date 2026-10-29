@@ -166,6 +166,7 @@ class MainActivity : Activity() {
         content.addView(button("Опасности") { showPage("Опасности", "Нет подтверждённых актуальных данных.") })
         content.addView(button("Свет") { showPage("Свет", "Информация об отключениях пока не загружена.") })
         content.addView(button("Вода") { showPage("Вода", "Информация об отключениях пока не загружена.") })
+        content.addView(button("Топливо") { showPage("Топливо", "Данные о наличии топлива пока не загружены.") })
         content.addView(button("Новости") { showPage("Новости", "Новости пока не загружены.") })
         content.addView(button("Чат") { showPage("Чат", "Вход по подтверждённому номеру телефона будет доступен после подключения сервера.") })
         content.addView(button("SOS · Экстренная помощь") { showSos() })
