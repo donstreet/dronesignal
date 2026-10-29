@@ -2,8 +2,12 @@
 import sqlite3
 import tempfile
 import unittest
+import json
+import threading
+import urllib.request
+from http.server import ThreadingHTTPServer
 from pathlib import Path
-from public_outages_api import initialize, get_outages
+from public_outages_api import initialize, get_outages, make_handler
 from restore_outage import restore
 from withdraw_outage import withdraw
 
@@ -21,6 +25,19 @@ class LifecycleTests(unittest.TestCase):
                      '["Тестовый адрес"]',"Тестовый источник",
                      "https://t.me/example/42","2026-10-29T09:00:00+03:00",
                      "2026-10-29T10:00:00+03:00"))
+            server = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(db))
+            worker = threading.Thread(target=server.serve_forever, daemon=True)
+            worker.start()
+            def http_feed():
+                url = ("http://127.0.0.1:%d/api/outages?kind=electricity&city=%%D0%%94%%D0%%BE%%D0%%BD%%D0%%B5%%D1%%86%%D0%%BA" % server.server_port)
+                with urllib.request.urlopen(url, timeout=3) as response:
+                    return json.load(response)["outages"]
+            try:
+                self.assertEqual(http_feed()[0]["status"],"active")
+            finally:
+                server.shutdown()
+                server.server_close()
+                worker.join(timeout=3)
             self.assertEqual(get_outages(db,"electricity","Донецк")[0]["status"],"active")
             self.assertEqual(get_outages(db,"water","Донецк"),[])
             self.assertTrue(restore(db,"power:42:Донецк","Донецк",
