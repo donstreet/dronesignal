@@ -1006,7 +1006,7 @@ class MainActivity : Activity() {
                         startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)))
                     }, LinearLayout.LayoutParams(0, -2, 1f))
                 }
-                panel.addView(actions)
+                panel.addView(actions, LinearLayout.LayoutParams(-1, -2))
                 if (link.max == null) panel.addView(text("Подтверждённая ссылка MAX пока не добавлена.", 12f, muted))
                 content.addView(panel, LinearLayout.LayoutParams(-1, -2).apply {
                     topMargin = dp(6)
