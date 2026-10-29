@@ -29,6 +29,14 @@ class PreviewTests(unittest.TestCase):
         self.assertEqual(len(p.posts), 1)
         self.assertIn("Подвоз воды Макеевка", p.posts[0]["text"])
 
+    def test_missing_publication_date_is_skipped(self):
+        with patch("telegram_fetch.CHANNELS", {"voda_dnr": "vodavdnr"}), \
+             patch("telegram_fetch.fetch_channel", return_value=[
+                 {"url": "https://t.me/vodavdnr/42", "text": "Подвоз воды Макеевка 29.10", "published_at": None}
+             ]):
+            data = collect()
+        self.assertEqual(data["posts"], [])
+
     def test_dedup_and_source(self):
         with patch("telegram_fetch.CHANNELS", {"makeevka_news": "Novosti_Makeevka"}), \
              patch("telegram_fetch.fetch_channel", return_value=[
