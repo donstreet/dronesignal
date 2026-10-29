@@ -8,7 +8,7 @@ import json
 import sqlite3
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import urlsplit, parse_qs
+from urllib.parse import urlsplit, parse_qs, quote
 
 CATEGORIES = {"water", "electricity", "mixed_utilities", "fuel", "news"}
 
@@ -19,7 +19,7 @@ def list_drafts(db_path, category=None, limit=50):
         raise ValueError("Invalid limit")
     if not db_path.exists():
         return []
-    with sqlite3.connect(f"file:{db_path}?mode=ro", uri=True) as db:
+    with sqlite3.connect(f"file:{quote(str(db_path.resolve()))}?mode=ro", uri=True) as db:
         db.row_factory = sqlite3.Row
         sql = """SELECT source_id, post_id, source_url, published_at, category, kind,
                         cities_json, body, moderation_status FROM review_posts
@@ -36,7 +36,7 @@ def list_drafts(db_path, category=None, limit=50):
             if "no such table" in str(exc):
                 return []
             raise
-    return [{**dict(row), "cities": json.loads(row["cities_json"])} for row in rows]
+    return [{**{k: row[k] for k in row.keys() if k != "cities_json"}, "cities": json.loads(row["cities_json"])} for row in rows]
 
 def handler_for(db_path):
     class Handler(BaseHTTPRequestHandler):
