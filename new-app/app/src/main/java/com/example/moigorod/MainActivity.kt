@@ -626,7 +626,7 @@ class MainActivity : Activity() {
             city = visible[position]
             getPreferences(MODE_PRIVATE).edit().putString("city", city).apply()
             dialog.dismiss()
-            showHome()
+            if (currentPage == "electricity") showElectricity() else showHome()
         }
         search.addTextChangedListener(object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
