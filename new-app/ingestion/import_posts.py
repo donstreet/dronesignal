@@ -8,8 +8,28 @@ import sqlite3
 from pathlib import Path
 from urllib.parse import urlparse
 
-ALLOWED = {"makeevka_news": "Novosti_Makeevka", "fuel_dnr": "fueldnr",
-           "benz_dnr": "benz_dnr", "voda_dnr": "vodavdnr"}
+ALLOWED = {
+    "makeevka_news": "Novosti_Makeevka", "fuel_dnr": "fueldnr",
+    "benz_dnr": "benz_dnr", "voda_dnr": "vodavdnr",
+    "donetsk_admin": "gorodDonetsk", "donetsk_head": "kulemzin_donetsk",
+    "debaltsevo_admin": "admDebaltsevo", "debaltsevo_head": "glavadebaltsevo",
+    "dokuchaevsk_admin": "Dokuchaevsk_admin", "dokuchaevsk_head": "dokuchaevsk",
+    "gorlovka_admin": "Gorlowka_now",
+    "enakievo_admin": "Enakievo_official", "enakievo_head": "IgorMartynov_enk",
+    "ilovaisk_admin": "ilovaisk_onlain", "ilovaisk_head": "dz_ilov_gorokrug",
+    "mariupol_admin": "nmrpl", "mariupol_head": "morgun_ov",
+    "snezhnoe_admin": "Snijne", "snezhnoe_head": "Ermakov_ESV",
+    "torez_admin": "torez_admin", "khartsyzsk_admin": "khartsyzsk_press_office",
+    "amvrosievka_admin": "amvr_admin", "amvrosievka_head": "Lyzov_amvrosievka",
+    "volnovakha_admin": "volnovahadnr", "volnovakha_head": "kazinchenko",
+    "shakhtarsk_admin": "AGShahtersk", "shakhtarsk_head": "shatov_av_agsh",
+    "novoazovsk_admin": "novoazovsk_adm", "novoazovsk_head": "novoazovskiy_region",
+    "telmanovo_admin": "adm_telmanovskogo_rajona",
+    "starobeshevo_admin": "starobeshevo1923", "volodarsk_admin": "volodinfo",
+    "mangush_admin": "Mangush_mo", "zhdanovka_admin": "adm_zhdanovka",
+    "kirovskoe_admin": "gorod_kirovskoe", "yasinovataya_admin": "gromko_yas",
+    "krasny_liman_admin": "kr_liman_admin",
+}
 CATEGORIES = {"water", "electricity", "mixed_utilities", "fuel", "news"}
 KINDS = {"delivery", "restored", "schedule", "outage_notice", "general"}
 
