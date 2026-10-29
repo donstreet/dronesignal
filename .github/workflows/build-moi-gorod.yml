@@ -42,12 +42,25 @@ jobs:
           gradle-version: '8.7'
       - name: Build debug APK
         working-directory: new-app
-        run: gradle --no-daemon :app:assembleDebug --stacktrace
+        run: |
+          set -o pipefail
+          gradle --no-daemon :app:assembleDebug --stacktrace 2>&1 | tee android-build.log
+      - name: Upload Android build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build-log
+          path: new-app/android-build.log
+          if-no-files-found: warn
       - name: Verify APK exists and is nonempty
         run: test -s new-app/app/build/outputs/apk/debug/app-debug.apk
+      - name: Generate APK SHA-256 checksum
+        run: cd new-app/app/build/outputs/apk/debug && sha256sum app-debug.apk > app-debug.apk.sha256
       - uses: actions/upload-artifact@v4
         with:
           name: Moi-Gorod-debug-apk
-          path: new-app/app/build/outputs/apk/debug/app-debug.apk
+          path: |
+            new-app/app/build/outputs/apk/debug/app-debug.apk
+            new-app/app/build/outputs/apk/debug/app-debug.apk.sha256
           if-no-files-found: error
           retention-days: 30
