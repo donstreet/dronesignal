@@ -117,13 +117,45 @@ class MainActivity : Activity() {
             "Шахтёрск",
             "Ясиноватая"
         )
-        android.app.AlertDialog.Builder(this)
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(24, 8, 24, 8)
+        }
+        val search = EditText(this).apply {
+            hint = "Поиск города"
+            singleLine = true
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or
+                android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+        }
+        val results = ListView(this)
+        val visible = cities.toMutableList()
+        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, visible)
+        results.adapter = adapter
+        layout.addView(search)
+        layout.addView(results, LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, (resources.displayMetrics.density * 420).toInt()))
+        val dialog = android.app.AlertDialog.Builder(this)
             .setTitle("Выберите город")
-            .setItems(cities) { _, index ->
-                city = cities[index]
-                getPreferences(MODE_PRIVATE).edit().putString("city", city).apply()
-                showHome()
-            }.show()
+            .setView(layout)
+            .setNegativeButton("Отмена", null)
+            .create()
+        results.setOnItemClickListener { _, _, position, _ ->
+            city = visible[position]
+            getPreferences(MODE_PRIVATE).edit().putString("city", city).apply()
+            dialog.dismiss()
+            showHome()
+        }
+        search.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val query = s?.toString()?.trim().orEmpty()
+                visible.clear()
+                visible.addAll(cities.filter { it.contains(query, ignoreCase = true) })
+                adapter.notifyDataSetChanged()
+            }
+            override fun afterTextChanged(s: android.text.Editable?) {}
+        })
+        dialog.show()
     }
 
     private fun showHome() {
