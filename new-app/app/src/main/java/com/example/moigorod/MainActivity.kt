@@ -837,7 +837,10 @@ class MainActivity : Activity() {
         currentPage = "news"
         shell("▤ Новости")
         card("Общая новостная лента", "Новости из одного проверенного MAX-канала будут доступны независимо от выбранного города.")
-        card("Актуальность", "Источник публикаций пока не подключён. Вымышленные новости не отображаются.")
+        card("Источник: Вести в MAX", "Открыть оригинальные публикации канала.", {
+            startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://max.ru/vesti")))
+        })
+        card("Актуальность", "Автоматическая загрузка публикаций пока не подключена. Читать новости можно по ссылке на источник.")
         content.addView(text("После подключения источника здесь будут заголовок, краткий текст, дата публикации и ссылка на оригинал.", 14f, muted))
         content.addView(button("Обновить ленту") { showNews() })
         content.addView(button("← На главную") { showHome() })
