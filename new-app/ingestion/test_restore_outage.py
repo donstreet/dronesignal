@@ -29,6 +29,12 @@ class RestorationTests(unittest.TestCase):
                 apply(url="http://example.org")
             with self.assertRaises(ValueError):
                 apply(city="Макеевка")
+            with self.assertRaises(ValueError):
+                restore(db,"voda_dnr:101:Донецк","Донецк",
+                        "https://t.me/vodavdnr/102","2026-10-29T09:00:00+03:00",True)
+            self.assertFalse(restore(db,"voda_dnr:999:Донецк","Донецк",
+                                     "https://t.me/vodavdnr/102",
+                                     "2026-10-29T11:00:00+03:00",True))
             self.assertTrue(apply())
             self.assertFalse(apply())
             self.assertEqual(get_outages(db,"water","Донецк")[0]["status"],"restored")
