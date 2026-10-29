@@ -29,14 +29,15 @@ class TelegramPreviewParser(HTMLParser):
         a = dict(attrs)
         classes = a.get("class", "").split()
         if self.post is not None:
-            self.depth += 1
-            if "tgme_widget_message_text" in classes:
+            if tag == "div":
+                self.depth += 1
+            if tag == "div" and "tgme_widget_message_text" in classes:
                 self.text_depth = self.depth
             if tag == "a" and "tgme_widget_message_date" in classes:
                 self.post["url"] = a.get("href", self.post["url"])
             if tag == "time":
                 self.post["published_at"] = a.get("datetime")
-        elif "tgme_widget_message_wrap" in classes:
+        elif tag == "div" and "tgme_widget_message_wrap" in classes:
             self.post = {"url": "", "published_at": None, "text": ""}
             self.depth = 1
 
@@ -46,6 +47,8 @@ class TelegramPreviewParser(HTMLParser):
 
     def handle_endtag(self, tag):
         if self.post is None:
+            return
+        if tag != "div":
             return
         if self.text_depth == self.depth:
             self.text_depth = None
