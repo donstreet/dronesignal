@@ -795,12 +795,10 @@ class MainActivity : Activity() {
 
     private fun showElectricity() {
         currentPage = "electricity"
+        if (city == "Выберите город") { chooseCity(); return }
         shell("⚡ Свет")
         content.addView(text("Город: $city", 17f, Color.WHITE, true))
-        if (city == "Выберите город") {
-            card("Выберите город", "Информация об отключениях привязана к населённому пункту.")
-            content.addView(button("Выбрать город") { chooseCity() })
-        } else {
+        run {
             card("Актуальность сведений", "Проверяем опубликованные сообщения. Нет данных — не значит, что отключений нет.")
             val status = text("Загрузка сведений…", 15f, muted)
             content.addView(status)
@@ -880,12 +878,10 @@ class MainActivity : Activity() {
 
     private fun showWater() {
         currentPage = "water"
+        if (city == "Выберите город") { chooseCity(); return }
         shell("💧 Вода")
         content.addView(text("Город: $city", 17f, Color.WHITE, true))
-        if (city == "Выберите город") {
-            card("Выберите город", "Информация об отключениях привязана к населённому пункту.")
-            content.addView(button("Выбрать город") { chooseCity() })
-        } else {
+        run {
             card("Актуальность сведений", "Проверяем опубликованные сообщения. Нет данных — не значит, что отключений нет.")
             val status = text("Загрузка сведений…", 15f, muted)
             content.addView(status)
@@ -965,11 +961,11 @@ class MainActivity : Activity() {
 
     private fun showFuel() {
         currentPage = "fuel"
+        if (city == "Выберите город") { chooseCity(); return }
         shell("⛽ Топливо")
         content.addView(text("Общая сводка: Донецк + Макеевка", 17f, Color.WHITE, true))
         if (city != "Донецк" && city != "Макеевка") {
-            card("Выбран город: $city", "Сводка пока охватывает только Донецк и Макеевку. Выберите один из них.")
-            content.addView(button("Выбрать город") { chooseCity() })
+            card("Сводка по топливу", "Доступная сводка охватывает Донецк и Макеевку. Выбранный город: $city. При необходимости смените город на главном экране.")
         } else {
             card("Статус данных", "Онлайн-источник пока не подключён. Наличие топлива на конкретных АЗС не подтверждено.")
             listOf("АИ-92", "АИ-95", "Дизель", "Газ").forEach { fuel ->
@@ -978,7 +974,6 @@ class MainActivity : Activity() {
             card("Ограничения и поставки", "Подтверждённых свежих сообщений пока нет. Это не означает, что ограничений нет.")
             content.addView(text("После подключения источников покажем АЗС, адрес, наличие, цену (если опубликована), время проверки и ссылку на сообщение.", 14f, muted))
             content.addView(button("Обновить сведения") { showFuel() })
-            content.addView(button("Изменить город") { chooseCity() })
         }
         content.addView(button("← На главную") { showHome() })
     }
@@ -1026,12 +1021,10 @@ class MainActivity : Activity() {
 
     private fun showNews() {
         currentPage = "news"
+        if (city == "Выберите город") { chooseCity(); return }
         shell("▤ Новости")
         content.addView(text("Город: $city", 17f, Color.WHITE, true))
-        if (city == "Выберите город") {
-            card("Сначала выберите город", "Лента новостей привязана к выбранному населённому пункту.")
-            content.addView(button("Выбрать город") { chooseCity() })
-        } else {
+        run {
             card("Проверенные публикации", "Показываем только сообщения, прошедшие проверку. Пустая лента не означает, что в городе ничего не происходит.")
             val status = text("Загрузка новостей…", 15f, muted)
             content.addView(status)
@@ -1324,11 +1317,9 @@ class MainActivity : Activity() {
 
     private fun showCommunityChat() {
         currentPage = "chat"
+        if (city == "Выберите город") { chooseCity(); return }
         shell("Онлайн-чат")
-        if (city == "Выберите город") {
-            content.addView(text("Для входа в городской чат сначала выберите город.", 16f, muted))
-            content.addView(button("Выбрать город") { chooseCity() })
-        } else {
+        run {
             content.addView(text("Общий чат: $city", 21f, Color.WHITE, true))
             content.addView(text("Здесь жители выбранного города смогут общаться друг с другом.", 16f, muted))
             card("Правила и модерация", "Автоматический фильтр спама, жалобы на сообщения и проверка модератором. Нарушения могут приводить к ограничению доступа.")
