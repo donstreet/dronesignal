@@ -383,8 +383,8 @@ class MainActivity : Activity() {
         val words = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         words.addView(text("БУДЬ В КУРСЕ", 13f, Color.WHITE, true))
         words.addView(text("ВАЖНЫХ СОБЫТИЙ", 20f, accent, true))
-        words.addView(text("Подпишись на канал и получай новости", 12f, muted))
-        words.addView(button("➤ Объявления города") {
+        words.addView(text("Частные объявления, услуги и реклама жителей", 12f, muted))
+        words.addView(button("➤ Частные объявления и реклама") {
             showAnnouncements()
         })
         panel.addView(words, LinearLayout.LayoutParams(0, -2, 1f))
@@ -1078,8 +1078,8 @@ class MainActivity : Activity() {
 
     private fun showAnnouncements() {
         currentPage = "announcements"
-        shell("Реклама и объявления")
-        content.addView(text("Объявления для жителей", 16f, muted))
+        shell("Частные объявления и реклама")
+        content.addView(text("Объявления жителей, услуги мастеров и реклама местного бизнеса", 16f, muted))
         val status = text("Загрузка объявлений…", 15f, muted)
         content.addView(status)
         val entries = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
@@ -1111,7 +1111,8 @@ class MainActivity : Activity() {
                         val items = mutableListOf<org.json.JSONObject>()
                         for (i in 0 until rows.length()) {
                             val item = rows.getJSONObject(i)
-                            if (item.optString("title").isNotBlank() &&
+                            if (item.optString("category") != "news" &&
+                                item.optString("title").isNotBlank() &&
                                 item.optString("body").isNotBlank()) items.add(item)
                         }
                         items
