@@ -23,11 +23,31 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - name: Use runner Android SDK
+      - name: Locate and prepare Android SDK
+        shell: bash
         run: |
-          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
-          test -d "$ANDROID_SDK_ROOT/platforms" || { echo "Android SDK missing"; exit 1; }
-          echo "Using preinstalled Android SDK: $ANDROID_SDK_ROOT"
+          set -euo pipefail
+          SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+          if [ -z "$SDK_ROOT" ] || [ ! -d "$SDK_ROOT" ]; then
+            echo "::error::Android SDK root is not set or does not exist"
+            env | grep -E 'ANDROID_(HOME|SDK_ROOT)' || true
+            exit 1
+          fi
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -type f -name sdkmanager -print -quit 2>/dev/null || true)"
+          if [ -n "$SDKMANAGER" ]; then
+            echo "Using sdkmanager: $SDKMANAGER"
+            yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
+            "$SDKMANAGER" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          else
+            echo "sdkmanager not found; checking preinstalled packages"
+            test -d "$SDK_ROOT/platforms/android-35" || { echo "::error::Android platform 35 is missing and sdkmanager was not found"; exit 1; }
+            test -d "$SDK_ROOT/build-tools/35.0.0" || { echo "::error::Android Build Tools 35.0.0 are missing and sdkmanager was not found"; exit 1; }
+          fi
+          test -d "$SDK_ROOT/platforms/android-35"
+          test -d "$SDK_ROOT/build-tools/35.0.0"
+          echo "Android SDK packages ready"
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.5'
