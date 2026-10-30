@@ -1419,4 +1419,3 @@ class MainActivity : Activity() {
         content.addView(button("← На главную") { showHome() })
     }
 }
-}
