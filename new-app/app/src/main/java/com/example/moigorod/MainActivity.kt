@@ -384,8 +384,8 @@ class MainActivity : Activity() {
         words.addView(text("БУДЬ В КУРСЕ", 13f, Color.WHITE, true))
         words.addView(text("ВАЖНЫХ СОБЫТИЙ", 20f, accent, true))
         words.addView(text("Подпишись на канал и получай новости", 12f, muted))
-        words.addView(button("➤ Перейти в Telegram") {
-            showPage("Реклама и объявления", "Ссылка на рекламный канал появится после настройки.")
+        words.addView(button("➤ Объявления города") {
+            showAnnouncements()
         })
         panel.addView(words, LinearLayout.LayoutParams(0, -2, 1f))
         panel.addView(text("📱", 42f, Color.WHITE, true))
@@ -721,11 +721,11 @@ class MainActivity : Activity() {
         currentPage = "settings"
         shell("⚙ Настройки")
         content.addView(text("Источник данных", 18f, Color.WHITE, true))
-        content.addView(text("Укажите HTTPS-адрес API сервера без /api/... в конце. Пока сервер не развёрнут и не проверен, это поле можно оставить пустым.", 14f, muted))
-        val current = getPreferences(MODE_PRIVATE).getString("utility_api_base", "").orEmpty()
+        content.addView(text("HTTPS-адрес API сервера. По умолчанию подключён проверенный сервер объявлений.", 14f, muted))
+        val current = getPreferences(MODE_PRIVATE).getString("utility_api_base", "https://dnrsignal.duckdns.org").orEmpty()
         val field = EditText(this).apply {
             setText(current)
-            hint = "https://api.example.org"
+            hint = "https://dnrsignal.duckdns.org"
             isSingleLine = true
             inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_URI
             setTextColor(Color.WHITE)
@@ -1073,6 +1073,108 @@ class MainActivity : Activity() {
             load()
             content.addView(button("Обновить ленту") { load() })
         }
+        content.addView(button("← На главную") { showHome() })
+    }
+
+    private fun showAnnouncements() {
+        currentPage = "announcements"
+        shell("Реклама и объявления")
+        content.addView(text("Объявления для жителей", 16f, muted))
+        val status = text("Загрузка объявлений…", 15f, muted)
+        content.addView(status)
+        val entries = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        content.addView(entries)
+
+        fun load() {
+            status.text = "Загрузка объявлений…"
+            entries.removeAllViews()
+            Thread {
+                val outcome = try {
+                    val base = getPreferences(MODE_PRIVATE)
+                        .getString("utility_api_base", "https://dnrsignal.duckdns.org")
+                        .orEmpty().trim().trimEnd('/')
+                    require(base.startsWith("https://")) { "Нужен HTTPS-адрес API." }
+                    val parsedBase = android.net.Uri.parse(base)
+                    require(!parsedBase.host.isNullOrBlank() && parsedBase.userInfo == null) {
+                        "Некорректный адрес API."
+                    }
+                    val conn = (java.net.URL(base + "/api/announcements").openConnection()
+                        as java.net.HttpURLConnection).apply {
+                        connectTimeout = 8000
+                        readTimeout = 8000
+                        setRequestProperty("Accept", "application/json")
+                    }
+                    try {
+                        require(conn.responseCode == 200) { "Сервер объявлений временно недоступен." }
+                        val json = org.json.JSONObject(conn.inputStream.bufferedReader().use { it.readText() })
+                        val rows = json.getJSONArray("announcements")
+                        val items = mutableListOf<org.json.JSONObject>()
+                        for (i in 0 until rows.length()) {
+                            val item = rows.getJSONObject(i)
+                            if (item.optString("title").isNotBlank() &&
+                                item.optString("body").isNotBlank()) items.add(item)
+                        }
+                        items
+                    } finally { conn.disconnect() }
+                } catch (e: Exception) { e }
+                runOnUiThread {
+                    if (currentPage != "announcements") return@runOnUiThread
+                    when (outcome) {
+                        is Exception -> status.text = outcome.message ?: "Не удалось загрузить объявления."
+                        is List<*> -> {
+                            val items = outcome.filterIsInstance<org.json.JSONObject>()
+                            status.text = if (items.isEmpty()) {
+                                "Пока нет опубликованных объявлений."
+                            } else {
+                                "Опубликованные объявления: ${items.size}"
+                            }
+                            items.forEach { item ->
+                                val category = when (item.optString("category")) {
+                                    "general" -> "Общее"
+                                    "electricity" -> "Электроснабжение"
+                                    "water" -> "Водоснабжение"
+                                    "news" -> "Новости"
+                                    "emergency" -> "Важное"
+                                    else -> "Объявление"
+                                }
+                                val panel = LinearLayout(this).apply {
+                                    orientation = LinearLayout.VERTICAL
+                                    setPadding(dp(16), dp(12), dp(16), dp(12))
+                                    background = outlinedPanel()
+                                    addView(text(category.uppercase(), 12f, accent, true))
+                                    addView(text(item.optString("title"), 19f, Color.WHITE, true))
+                                    addView(text(item.optString("body"), 15f, muted))
+                                    val published = item.optString("published_at")
+                                    if (published.isNotBlank()) addView(text("Опубликовано: $published", 12f, muted))
+                                    val actionUrl = item.optString("action_url")
+                                    val actionUri = android.net.Uri.parse(actionUrl)
+                                    if (actionUri.scheme == "https" && !actionUri.host.isNullOrBlank() &&
+                                        actionUri.userInfo == null) {
+                                        addView(button("Подробнее") {
+                                            startActivity(android.content.Intent(
+                                                android.content.Intent.ACTION_VIEW, actionUri))
+                                        })
+                                    }
+                                    val phone = item.optString("action_phone").trim()
+                                    if (phone.isNotBlank() && phone.matches(Regex("^[+0-9() -]{5,24}$"))) {
+                                        addView(button("Позвонить: $phone") {
+                                            startActivity(android.content.Intent(
+                                                android.content.Intent.ACTION_DIAL,
+                                                android.net.Uri.parse("tel:" + phone.filter { it.isDigit() || it == '+' })))
+                                        })
+                                    }
+                                }
+                                entries.addView(panel, LinearLayout.LayoutParams(-1, -2).apply {
+                                    bottomMargin = dp(8)
+                                })
+                            }
+                        }
+                    }
+                }
+            }.start()
+        }
+        load()
+        content.addView(button("Обновить объявления") { load() })
         content.addView(button("← На главную") { showHome() })
     }
 
