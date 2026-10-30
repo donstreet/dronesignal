@@ -75,13 +75,20 @@ class MainActivity : Activity() {
         setContentView(root)
         // Keep the whole layout, especially bottom navigation, above Android's system bars.
         root.setOnApplyWindowInsetsListener { view, insets ->
-            val bottomInset = if (android.os.Build.VERSION.SDK_INT >= 30) {
-                insets.getInsets(android.view.WindowInsets.Type.navigationBars()).bottom
+            val topInset: Int
+            val bottomInset: Int
+            if (android.os.Build.VERSION.SDK_INT >= 30) {
+                topInset = insets.getInsets(android.view.WindowInsets.Type.statusBars()).top
+                bottomInset = insets.getInsets(android.view.WindowInsets.Type.navigationBars()).bottom
             } else {
                 @Suppress("DEPRECATION")
-                insets.systemWindowInsetBottom
+                run {
+                    topInset = insets.systemWindowInsetTop
+                    bottomInset = insets.systemWindowInsetBottom
+                }
             }
-            view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, bottomInset)
+            // Keep the whole app below the status bar and above the navigation bar.
+            view.setPadding(view.paddingLeft, topInset, view.paddingRight, bottomInset)
             insets
         }
         root.requestApplyInsets()
@@ -349,21 +356,51 @@ class MainActivity : Activity() {
                 canvas.drawPath(path, paint)
                 canvas.drawLine(cx - 11 * scale, cy + 6 * scale, cx + 11 * scale, cy + 6 * scale, paint)
                 canvas.drawArc(cx - 3 * scale, cy + 7 * scale, cx + 3 * scale, cy + 12 * scale, 0f, 180f, false, paint)
+                // Red unread indicator, matching the approved reference.
+                paint.style = android.graphics.Paint.Style.FILL
+                paint.color = accent
+                canvas.drawCircle(cx + dp(13), cy - dp(12), dp(4.5f), paint)
             }
         }.apply {
-            background = android.graphics.drawable.GradientDrawable().apply {
-                cornerRadius = dp(12).toFloat()
-                setColor(surface)
-            }
             contentDescription = "Уведомления"
             setOnClickListener { showPage("Уведомления", "Здесь будут отображаться уведомления приложения.") }
         }
-        row.addView(bell, LinearLayout.LayoutParams(dp(44), dp(44)).apply {
+        row.addView(bell, LinearLayout.LayoutParams(dp(48), dp(48)).apply {
             rightMargin = dp(4)
         })
-        row.addView(button("⚙") {
-            showSettings()
-        }, LinearLayout.LayoutParams(dp(48), dp(48)))
+        val settings = object : View(this) {
+            private val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                color = Color.WHITE
+                style = android.graphics.Paint.Style.STROKE
+                strokeWidth = dp(2).toFloat()
+                strokeCap = android.graphics.Paint.Cap.ROUND
+                strokeJoin = android.graphics.Paint.Join.ROUND
+            }
+            override fun onDraw(canvas: android.graphics.Canvas) {
+                super.onDraw(canvas)
+                val cx = width / 2f
+                val cy = height / 2f
+                val outer = dp(14).toFloat()
+                val inner = dp(10).toFloat()
+                val teeth = android.graphics.Path()
+                for (i in 0 until 24) {
+                    val a = Math.toRadians(i * 15.0)
+                    val radius = when (i % 3) { 0 -> outer; 1 -> outer; else -> inner }
+                    val x = cx + kotlin.math.cos(a).toFloat() * radius
+                    val y = cy + kotlin.math.sin(a).toFloat() * radius
+                    if (i == 0) teeth.moveTo(x, y) else teeth.lineTo(x, y)
+                }
+                teeth.close()
+                canvas.drawPath(teeth, paint)
+                canvas.drawCircle(cx, cy, dp(5).toFloat(), paint)
+            }
+        }.apply {
+            contentDescription = "Настройки"
+            isClickable = true
+            isFocusable = true
+            setOnClickListener { showSettings() }
+        }
+        row.addView(settings, LinearLayout.LayoutParams(dp(48), dp(48)))
         content.addView(row)
     }
 
