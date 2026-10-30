@@ -1,7 +1,7 @@
 name: Build Moi Gorod
 on:
   push:
-    branches: [clean-rebuild, fix/header-statusbar-icons-142]
+    branches: [clean-rebuild, fix/header-statusbar-icons-142, news-source-labels-148]
     paths:
       - 'new-app/**'
       - '.github/workflows/build-moi-gorod.yml'

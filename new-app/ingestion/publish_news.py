@@ -12,6 +12,47 @@ from urllib.parse import urlparse
 from import_posts import ALLOWED
 from public_outages_api import NEWS_CITIES, initialize
 
+# Human-readable labels shown to app users; never expose internal source IDs.
+SOURCE_LABELS = {
+    "makeevka_news": "Новости Макеевки",
+    "fuel_dnr": "Информация о топливе",
+    "benz_dnr": "Информация о бензине",
+    "voda_dnr": "Вода Донбасса",
+    "donetsk_admin": "Администрация Донецка",
+    "donetsk_head": "Глава Донецка",
+    "debaltsevo_admin": "Администрация Дебальцево",
+    "debaltsevo_head": "Глава Дебальцево",
+    "dokuchaevsk_admin": "Администрация Докучаевска",
+    "dokuchaevsk_head": "Глава Докучаевска",
+    "gorlovka_admin": "Администрация Горловки",
+    "enakievo_admin": "Администрация Енакиево",
+    "enakievo_head": "Глава Енакиево",
+    "ilovaisk_admin": "Администрация Иловайска",
+    "ilovaisk_head": "Руководитель Иловайска",
+    "mariupol_admin": "Администрация Мариуполя",
+    "mariupol_head": "Глава Мариуполя",
+    "snezhnoe_admin": "Администрация Снежного",
+    "snezhnoe_head": "Глава Снежного",
+    "torez_admin": "Администрация Тореза",
+    "khartsyzsk_admin": "Администрация Харцызска",
+    "amvrosievka_admin": "Администрация Амвросиевского округа",
+    "amvrosievka_head": "Глава Амвросиевского округа",
+    "volnovakha_admin": "Администрация Волновахского округа",
+    "volnovakha_head": "Глава Волновахского округа",
+    "shakhtarsk_admin": "Администрация Шахтёрского округа",
+    "shakhtarsk_head": "Глава Шахтёрского округа",
+    "novoazovsk_admin": "Администрация Новоазовского округа",
+    "novoazovsk_head": "Глава Новоазовского округа",
+    "telmanovo_admin": "Администрация Тельмановского округа",
+    "starobeshevo_admin": "Администрация Старобешевского округа",
+    "volodarsk_admin": "Администрация Володарского округа",
+    "mangush_admin": "Администрация Мангушского округа",
+    "zhdanovka_admin": "Администрация Ждановки",
+    "kirovskoe_admin": "Администрация Кировского",
+    "yasinovataya_admin": "Администрация Ясиноватского округа",
+    "krasny_liman_admin": "Администрация Краснолиманского округа",
+}
+
 def publish_news(review_db: Path, public_db: Path, source_id: str, post_id: str,
                  city: str, title: str, summary: str, confirmed: bool):
     if not confirmed:
@@ -57,7 +98,8 @@ def publish_news(review_db: Path, public_db: Path, source_id: str, post_id: str,
             (id,city,title,summary,category,source,source_url,published_at,verified_at,verification,visible)
             VALUES (?,?,?,?,?,?,?,?,?,'confirmed',1)
             ON CONFLICT(id) DO NOTHING""",
-            (news_id, city, title, summary, "news", source_id, expected_url,
+            (news_id, city, title, summary, "news",
+             SOURCE_LABELS.get(source_id, channel), expected_url,
              published_at, verified_at))
     # If this update fails, the public insert is idempotent; rerunning is safe.
     with sqlite3.connect(review_db) as review:
