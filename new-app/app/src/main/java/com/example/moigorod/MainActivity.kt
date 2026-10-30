@@ -239,11 +239,11 @@ class MainActivity : Activity() {
         else -> key
     } }
 
-    private fun iconTile(icon: String, label: String, description: String, action: () -> Unit): LinearLayout =
+    private fun iconTile(icon: String, label: String, description: String, compact: Boolean = false, action: () -> Unit): LinearLayout =
         LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(10), dp(8), dp(8), dp(8))
+            setPadding(dp(if (compact) 8 else 10), dp(if (compact) 5 else 8), dp(if (compact) 6 else 8), dp(if (compact) 5 else 8))
             background = outlinedPanel()
             fun cleanLine(value: String, size: Float, color: Int, bold: Boolean = false) =
                 TextView(this@MainActivity).apply {
@@ -255,12 +255,13 @@ class MainActivity : Activity() {
                     includeFontPadding = false
                     gravity = Gravity.CENTER_VERTICAL
                 }
-            addView(iconGraphic(icon, 32), LinearLayout.LayoutParams(dp(34), dp(34)).apply { bottomMargin = dp(3) })
-            addView(cleanLine(label, 13f, Color.WHITE, true).apply {
+            val iconSize = if (compact) 28 else 32
+            addView(iconGraphic(icon, iconSize), LinearLayout.LayoutParams(dp(iconSize + 2), dp(iconSize + 2)).apply { bottomMargin = dp(2) })
+            addView(cleanLine(label, if (compact) 12.5f else 13f, Color.WHITE, true).apply {
                 maxLines = 2
                 ellipsize = null
                 gravity = Gravity.CENTER_VERTICAL
-            }, LinearLayout.LayoutParams(-1, -2).apply { minimumHeight = dp(30) })
+            }, LinearLayout.LayoutParams(-1, -2).apply { minimumHeight = dp(if (compact) 27 else 30) })
             if (description.isNotBlank()) {
                 addView(cleanLine(description, 11f, muted), LinearLayout.LayoutParams(-1, dp(20)))
             }
@@ -740,10 +741,10 @@ class MainActivity : Activity() {
             Triple("⌖", "Полезные адреса", "Городские службы"),
             Triple("chat", "Каналы", "Администрации")
         ).forEach { item ->
-            nearbyRow.addView(iconTile(item.first, item.second, "") {
+            nearbyRow.addView(iconTile(item.first, item.second, "", compact = true) {
                 if (item.second == "Каналы") showOfficialChannels()
                 else showPage(item.second, "Сведения появятся после подключения справочника.")
-            }, LinearLayout.LayoutParams(dp(100), dp(84)).apply { rightMargin = dp(5) })
+            }, LinearLayout.LayoutParams(dp(108), dp(72)).apply { rightMargin = dp(5) })
         }
         nearbyScroll.addView(nearbyRow)
         content.addView(nearbyScroll)
