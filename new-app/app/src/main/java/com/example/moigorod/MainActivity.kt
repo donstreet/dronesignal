@@ -795,7 +795,6 @@ class MainActivity : Activity() {
 
     private fun showElectricity() {
         currentPage = "electricity"
-        if (city == "Выберите город") { chooseCity(); return }
         shell("⚡ Свет")
         content.addView(text("Город: $city", 17f, Color.WHITE, true))
         run {
@@ -878,7 +877,6 @@ class MainActivity : Activity() {
 
     private fun showWater() {
         currentPage = "water"
-        if (city == "Выберите город") { chooseCity(); return }
         shell("💧 Вода")
         content.addView(text("Город: $city", 17f, Color.WHITE, true))
         run {
@@ -961,7 +959,6 @@ class MainActivity : Activity() {
 
     private fun showFuel() {
         currentPage = "fuel"
-        if (city == "Выберите город") { chooseCity(); return }
         shell("⛽ Топливо")
         content.addView(text("Общая сводка: Донецк + Макеевка", 17f, Color.WHITE, true))
         if (city != "Донецк" && city != "Макеевка") {
@@ -1021,7 +1018,6 @@ class MainActivity : Activity() {
 
     private fun showNews() {
         currentPage = "news"
-        if (city == "Выберите город") { chooseCity(); return }
         shell("▤ Новости")
         content.addView(text("Город: $city", 17f, Color.WHITE, true))
         run {
