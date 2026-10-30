@@ -373,9 +373,20 @@ class MainActivity : Activity() {
         row.addView(bell, LinearLayout.LayoutParams(dp(48), dp(48)).apply {
             rightMargin = dp(6)
         })
-        row.addView(button("⚙") {
-            showSettings()
-        }, LinearLayout.LayoutParams(dp(48), dp(48)))
+        val settings = TextView(this).apply {
+            text = "⚙"
+            textSize = 23f
+            gravity = Gravity.CENTER
+            setTextColor(Color.WHITE)
+            includeFontPadding = false
+            background = android.graphics.drawable.GradientDrawable().apply {
+                cornerRadius = dp(12).toFloat()
+                setColor(surface)
+            }
+            contentDescription = "Настройки"
+            setOnClickListener { showSettings() }
+        }
+        row.addView(settings, LinearLayout.LayoutParams(dp(48), dp(48)))
         content.addView(row)
     }
 
@@ -528,7 +539,7 @@ class MainActivity : Activity() {
             Triple("⌂", "Главная", { showHome() }),
             Triple("⌖", "Карта", { showPage("Карта", "Карта пока не подключена.") }),
             Triple("⚠", "Опасности", { showPage("Опасности", "Нет подтверждённых актуальных данных. Это не означает отсутствие опасности.") }),
-            Triple("⋯", "Ещё", { showPage("Ещё", "Дополнительные сервисы.") })
+            Triple("⋯", "Ещё", { showServiceCatalog() })
         )
         items.forEachIndexed { index, item ->
             val col = LinearLayout(this).apply {
@@ -561,6 +572,28 @@ class MainActivity : Activity() {
             topMargin = dp(2)
             bottomMargin = dp(2)
         })
+    }
+
+    private fun showServiceCatalog() {
+        currentPage = "services"
+        shell("Городские службы")
+        content.addView(text("Полезные места и услуги для жителей $city", 15f, muted))
+        val services = listOf(
+            Triple("Аптеки", "Аптеки и дежурные пункты. Адреса добавим после проверки источников.", "Аптеки"),
+            Triple("Больницы и поликлиники", "Медицинские учреждения и контакты регистратур.", "Медицина"),
+            Triple("Продуктовые магазины", "Магазины рядом с выбранным населённым пунктом.", "Магазины"),
+            Triple("Банки и банкоматы", "Отделения банков и банкоматы.", "Банки и банкоматы"),
+            Triple("Почта", "Почтовые отделения и графики работы.", "Почта"),
+            Triple("Транспорт", "Автовокзалы, остановки и расписания.", "Транспорт"),
+            Triple("АЗС и автосервисы", "Заправки, шиномонтаж и ремонт автомобилей.", "АЗС и автосервисы"),
+            Triple("Экстренные службы", "Контакты экстренной помощи и полезные телефоны.", "Экстренные службы")
+        )
+        services.forEach { service ->
+            card(service.first, service.second) {
+                showPage(service.third, "Для города «$city» проверенные адреса и контакты этого раздела будут добавлены после сверки с достоверными источниками. Мы не показываем выдуманные адреса.")
+            }
+        }
+        content.addView(button("← На главную") { showHome() })
     }
 
     private fun chooseCity() {
