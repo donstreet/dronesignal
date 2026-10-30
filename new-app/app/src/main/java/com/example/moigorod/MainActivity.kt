@@ -55,37 +55,49 @@ class MainActivity : Activity() {
             setOnClickListener { action() }
         }
 
-    private fun shell(title: String) {
+    private fun shell(title: String, allowScroll: Boolean = true) {
         root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(bg)
         }
-        val scroll = ScrollView(this).apply {
-            setBackgroundColor(bg)
-            isFillViewport = true
-            overScrollMode = View.OVER_SCROLL_NEVER
-            isVerticalScrollBarEnabled = false
-        }
         content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(12), dp(20), dp(8))
+            setPadding(dp(20), dp(8), dp(20), dp(4))
         }
-        scroll.addView(content)
-        root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+        if (allowScroll) {
+            val scroll = ScrollView(this).apply {
+                setBackgroundColor(bg)
+                isFillViewport = true
+                overScrollMode = View.OVER_SCROLL_NEVER
+                isVerticalScrollBarEnabled = false
+            }
+            scroll.addView(content)
+            root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+        } else {
+            root.addView(content, LinearLayout.LayoutParams(-1, 0, 1f))
+        }
         setContentView(root)
-        // Keep the whole layout, especially bottom navigation, above Android's system bars.
+        // Keep app content below the status bar and above Android navigation controls.
         root.setOnApplyWindowInsetsListener { view, insets ->
-            val bottomInset = if (android.os.Build.VERSION.SDK_INT >= 30) {
-                insets.getInsets(android.view.WindowInsets.Type.navigationBars()).bottom
+            val topInset: Int
+            val bottomInset: Int
+            if (android.os.Build.VERSION.SDK_INT >= 30) {
+                val bars = insets.getInsets(android.view.WindowInsets.Type.statusBars() or android.view.WindowInsets.Type.navigationBars())
+                topInset = bars.top
+                bottomInset = bars.bottom
             } else {
                 @Suppress("DEPRECATION")
-                insets.systemWindowInsetBottom
+                val top = insets.systemWindowInsetTop
+                @Suppress("DEPRECATION")
+                val bottom = insets.systemWindowInsetBottom
+                topInset = top
+                bottomInset = bottom
             }
-            view.setPadding(view.paddingLeft, view.paddingTop, view.paddingRight, bottomInset)
+            view.setPadding(view.paddingLeft, topInset, view.paddingRight, bottomInset)
             insets
         }
         root.requestApplyInsets()
-        if (title.isNotBlank()) content.addView(text(title, 29f, Color.WHITE, true))
+        if (title.isNotBlank()) content.addView(text(title, 27f, Color.WHITE, true))
     }
 
     private fun section(title: String, message: String) {
@@ -358,8 +370,8 @@ class MainActivity : Activity() {
             contentDescription = "Уведомления"
             setOnClickListener { showPage("Уведомления", "Здесь будут отображаться уведомления приложения.") }
         }
-        row.addView(bell, LinearLayout.LayoutParams(dp(44), dp(44)).apply {
-            rightMargin = dp(4)
+        row.addView(bell, LinearLayout.LayoutParams(dp(48), dp(48)).apply {
+            rightMargin = dp(6)
         })
         row.addView(button("⚙") {
             showSettings()
@@ -654,7 +666,7 @@ class MainActivity : Activity() {
 
     private fun showHome() {
         currentPage = "home"
-        shell("")
+        shell("", allowScroll = false)
         content.removeAllViews()
         header()
         promoBanner()
@@ -688,24 +700,7 @@ class MainActivity : Activity() {
         content.addView(text("Городские разделы", 21f, Color.WHITE, true))
         featureStrip()
         chatPanel()
-        content.addView(text("Полезное рядом  →", 21f, Color.WHITE, true).apply {
-            setPadding(0, dp(12), 0, dp(2))
-        })
-        val nearbyScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
-        val nearbyRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        listOf(
-            Triple("⚕", "Аптеки", "Справочник аптек"),
-            Triple("🚕", "Такси", "Контакты такси"),
-            Triple("⌖", "Полезные адреса", "Городские службы"),
-            Triple("chat", "Каналы", "Администрации")
-        ).forEach { item ->
-            nearbyRow.addView(iconTile(item.first, item.second, "") {
-                if (item.second == "Каналы") showOfficialChannels()
-                else showPage(item.second, "Сведения появятся после подключения справочника.")
-            }, LinearLayout.LayoutParams(dp(90), dp(72)).apply { rightMargin = dp(5) })
-        }
-        nearbyScroll.addView(nearbyRow)
-        content.addView(nearbyScroll)
+        // Keep the home screen fixed and uncluttered; extra services live under “Ещё”.
         bottomNav()
     }
 
