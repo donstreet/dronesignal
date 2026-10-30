@@ -1380,27 +1380,78 @@ class MainActivity : Activity() {
     private fun showSos() {
         currentPage = "sos"
         shell("Экстренная помощь")
-        content.addView(text("Выберите действие. Ничего не отправляется автоматически.", 16f, muted))
+        content.addView(text("Выберите действие. Приложение само не звонит и не отправляет сообщения.", 16f, muted))
+
         content.addView(button("Позвонить 112") {
             android.app.AlertDialog.Builder(this)
                 .setTitle("Открыть набор номера 112?")
-                .setMessage("Вызов не будет начат автоматически.")
+                .setMessage("Откроется приложение телефона с номером 112. Чтобы начать вызов, нажмите кнопку звонка в приложении телефона.")
                 .setNegativeButton("Отмена", null)
-                .setPositiveButton("Открыть") { _, _ ->
-                    startActivity(android.content.Intent(android.content.Intent.ACTION_DIAL,
-                        android.net.Uri.parse("tel:112")))
+                .setPositiveButton("Открыть набор") { _, _ ->
+                    val dialIntent = android.content.Intent(
+                        android.content.Intent.ACTION_DIAL,
+                        android.net.Uri.parse("tel:112")
+                    )
+                    try {
+                        if (dialIntent.resolveActivity(packageManager) != null) {
+                            startActivity(dialIntent)
+                        } else {
+                            android.widget.Toast.makeText(
+                                this, "На устройстве не найдено приложение для звонков.",
+                                android.widget.Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    } catch (_: android.content.ActivityNotFoundException) {
+                        android.widget.Toast.makeText(
+                            this, "Не удалось открыть набор номера. Попробуйте открыть приложение телефона вручную.",
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                    } catch (_: SecurityException) {
+                        android.widget.Toast.makeText(
+                            this, "Система не разрешила открыть набор номера.",
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                    }
                 }.show()
         })
+
         content.addView(button("Сообщить близким") {
             android.app.AlertDialog.Builder(this)
-                .setTitle("Сообщение близким")
-                .setMessage("Откроется приложение сообщений. Выберите получателя и подтвердите отправку самостоятельно. Геолокация не передаётся без разрешения.")
+                .setTitle("Подготовить сообщение близким?")
+                .setMessage("Откроется приложение SMS с готовым текстом. Выберите получателя и нажмите отправку самостоятельно. Сообщение и геолокация не отправляются приложением автоматически.")
                 .setNegativeButton("Отмена", null)
-                .setPositiveButton("Продолжить") { _, _ ->
-                    startActivity(android.content.Intent(android.content.Intent.ACTION_SENDTO,
-                        android.net.Uri.parse("smsto:")).putExtra("sms_body", "Мне нужна помощь. Пожалуйста, свяжитесь со мной."))
+                .setPositiveButton("Открыть SMS") { _, _ ->
+                    val smsIntent = android.content.Intent(
+                        android.content.Intent.ACTION_SENDTO,
+                        android.net.Uri.parse("smsto:")
+                    ).putExtra(
+                        "sms_body",
+                        "Мне нужна помощь. Пожалуйста, свяжитесь со мной."
+                    )
+                    try {
+                        if (smsIntent.resolveActivity(packageManager) != null) {
+                            startActivity(smsIntent)
+                        } else {
+                            android.widget.Toast.makeText(
+                                this, "На устройстве не найдено приложение для SMS.",
+                                android.widget.Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    } catch (_: android.content.ActivityNotFoundException) {
+                        android.widget.Toast.makeText(
+                            this, "Не удалось открыть SMS. Попробуйте открыть приложение сообщений вручную.",
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                    } catch (_: SecurityException) {
+                        android.widget.Toast.makeText(
+                            this, "Система не разрешила открыть SMS.",
+                            android.widget.Toast.LENGTH_LONG
+                        ).show()
+                    }
                 }.show()
         })
+
+        content.addView(text("Важно: приложение не подтверждает, что экстренная служба получила вызов или что близкие получили сообщение.", 13f, muted))
         content.addView(button("← На главную") { showHome() })
     }
 }
