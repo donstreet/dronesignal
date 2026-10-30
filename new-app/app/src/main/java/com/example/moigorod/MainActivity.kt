@@ -256,7 +256,11 @@ class MainActivity : Activity() {
                     gravity = Gravity.CENTER_VERTICAL
                 }
             addView(iconGraphic(icon, 32), LinearLayout.LayoutParams(dp(34), dp(34)).apply { bottomMargin = dp(3) })
-            addView(cleanLine(label, 14f, Color.WHITE, true), LinearLayout.LayoutParams(-1, dp(24)))
+            addView(cleanLine(label, 13f, Color.WHITE, true).apply {
+                maxLines = 2
+                ellipsize = null
+                gravity = Gravity.CENTER_VERTICAL
+            }, LinearLayout.LayoutParams(-1, -2).apply { minimumHeight = dp(30) })
             if (description.isNotBlank()) {
                 addView(cleanLine(description, 11f, muted), LinearLayout.LayoutParams(-1, dp(20)))
             }
@@ -739,7 +743,7 @@ class MainActivity : Activity() {
             nearbyRow.addView(iconTile(item.first, item.second, "") {
                 if (item.second == "Каналы") showOfficialChannels()
                 else showPage(item.second, "Сведения появятся после подключения справочника.")
-            }, LinearLayout.LayoutParams(dp(90), dp(72)).apply { rightMargin = dp(5) })
+            }, LinearLayout.LayoutParams(dp(100), dp(84)).apply { rightMargin = dp(5) })
         }
         nearbyScroll.addView(nearbyRow)
         content.addView(nearbyScroll)
