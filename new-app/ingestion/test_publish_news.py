@@ -31,6 +31,8 @@ class PublishNewsTests(unittest.TestCase):
             rows = get_news(public_db, "Горловка")
             self.assertEqual(len(rows), 1)
             self.assertEqual(rows[0]["source_url"], "https://t.me/Gorlowka_now/42")
+            self.assertEqual(rows[0]["source"], "Администрация Горловки")
+            self.assertNotEqual(rows[0]["source"], "gorlovka_admin")
             self.assertEqual(rows[0]["verification"], "confirmed")
             with sqlite3.connect(review_db) as db:
                 status = db.execute("SELECT moderation_status FROM review_posts WHERE post_id='42'").fetchone()[0]
