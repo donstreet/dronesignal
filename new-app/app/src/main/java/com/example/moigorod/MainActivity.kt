@@ -733,7 +733,10 @@ class MainActivity : Activity() {
         content.addView(text("Полезное рядом  →", 21f, Color.WHITE, true).apply {
             setPadding(0, dp(12), 0, dp(2))
         })
-        val nearbyScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
+        val nearbyScroll = HorizontalScrollView(this).apply {
+            isHorizontalScrollBarEnabled = false
+            overScrollMode = View.OVER_SCROLL_NEVER
+        }
         val nearbyRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         listOf(
             Triple("⚕", "Аптеки", "Справочник аптек"),
@@ -748,6 +751,55 @@ class MainActivity : Activity() {
         }
         nearbyScroll.addView(nearbyRow)
         content.addView(nearbyScroll)
+
+        // Small page indicators for the horizontally scrollable useful-services row.
+        val nearbyDots = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            setPadding(0, dp(7), 0, dp(2))
+        }
+        val dotViews = mutableListOf<View>()
+        fun refreshNearbyDots() {
+            val viewport = nearbyScroll.width
+            val contentWidth = nearbyRow.width
+            if (viewport <= 0 || contentWidth <= 0) return
+            val pageCount = maxOf(1, kotlin.math.ceil(contentWidth.toDouble() / viewport.toDouble()).toInt())
+            if (dotViews.size != pageCount) {
+                nearbyDots.removeAllViews()
+                dotViews.clear()
+                repeat(pageCount) {
+                    val dot = View(this).apply {
+                        background = android.graphics.drawable.GradientDrawable().apply {
+                            shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                            cornerRadius = dp(4).toFloat()
+                            setColor(muted)
+                        }
+                    }
+                    dotViews.add(dot)
+                    nearbyDots.addView(dot, LinearLayout.LayoutParams(dp(6), dp(6)).apply {
+                        leftMargin = dp(3)
+                        rightMargin = dp(3)
+                    })
+                }
+            }
+            val maxScroll = maxOf(1, nearbyRow.width - nearbyScroll.width)
+            val active = ((nearbyScroll.scrollX.toFloat() / maxScroll) * (pageCount - 1))
+                .toInt().coerceIn(0, pageCount - 1)
+            dotViews.forEachIndexed { index, dot ->
+                val params = dot.layoutParams as LinearLayout.LayoutParams
+                params.width = dp(if (index == active) 16 else 6)
+                params.height = dp(6)
+                dot.layoutParams = params
+                (dot.background as android.graphics.drawable.GradientDrawable).setColor(
+                    if (index == active) accent else muted
+                )
+            }
+            nearbyDots.visibility = if (pageCount > 1) View.VISIBLE else View.GONE
+        }
+        nearbyScroll.setOnScrollChangeListener { _, _, _, _, _ -> refreshNearbyDots() }
+        nearbyScroll.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> refreshNearbyDots() }
+        nearbyRow.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> refreshNearbyDots() }
+        content.addView(nearbyDots, LinearLayout.LayoutParams(-1, -2))
         bottomNav()
     }
 
