@@ -75,8 +75,8 @@ class MainActivity : Activity() {
         setContentView(root)
         // Keep the whole layout, especially bottom navigation, above Android's system bars.
         root.setOnApplyWindowInsetsListener { view, insets ->
-            val topInset: Int
-            val bottomInset: Int
+            var topInset = 0
+            var bottomInset = 0
             if (android.os.Build.VERSION.SDK_INT >= 30) {
                 topInset = insets.getInsets(android.view.WindowInsets.Type.statusBars()).top
                 bottomInset = insets.getInsets(android.view.WindowInsets.Type.navigationBars()).bottom
