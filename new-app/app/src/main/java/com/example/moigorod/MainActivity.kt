@@ -359,7 +359,7 @@ class MainActivity : Activity() {
                 // Red unread indicator, matching the approved reference.
                 paint.style = android.graphics.Paint.Style.FILL
                 paint.color = accent
-                canvas.drawCircle(cx + dp(13), cy - dp(12), dp(4.5f), paint)
+                canvas.drawCircle(cx + dp(13).toFloat(), cy - dp(12).toFloat(), dp(5).toFloat(), paint)
             }
         }.apply {
             contentDescription = "Уведомления"
