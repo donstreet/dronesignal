@@ -68,7 +68,7 @@ class MainActivity : Activity() {
         }
         content = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(12), dp(20), dp(8))
+            setPadding(dp(20), dp(18), dp(20), dp(8))
         }
         scroll.addView(content)
         root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
@@ -97,8 +97,7 @@ class MainActivity : Activity() {
 
     private fun section(title: String, message: String) {
         content.addView(text(title, 21f, Color.WHITE, true))
-        content.addView(text(message, 15f, muted))
-    }
+        content.addView(text(message, 15f, muted))    }
 
     private fun outlinedPanel(): android.graphics.drawable.GradientDrawable =
         android.graphics.drawable.GradientDrawable().apply {
@@ -197,8 +196,7 @@ class MainActivity : Activity() {
                     }
                     p.style = android.graphics.Paint.Style.FILL; canvas.drawPath(path,p)
                 }
-                "⛽" -> {
-                    canvas.drawRoundRect(cx-r*.42f,cy-r*.42f,cx+r*.20f,cy+r*.48f,r*.08f,r*.08f,p)
+                "⛽" -> {                    canvas.drawRoundRect(cx-r*.42f,cy-r*.42f,cx+r*.20f,cy+r*.48f,r*.08f,r*.08f,p)
                     canvas.drawRect(cx-r*.30f,cy-r*.30f,cx+r*.08f,cy-r*.02f,p)
                     canvas.drawLine(cx+r*.20f,cy-r*.28f,cx+r*.43f,cy-r*.10f,p)
                     canvas.drawLine(cx+r*.43f,cy-r*.10f,cx+r*.43f,cy+r*.22f,p)
@@ -297,8 +295,7 @@ class MainActivity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        val brand = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
+        val brand = LinearLayout(this).apply {            orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
         val cityBadge = TextView(this).apply {
@@ -380,8 +377,8 @@ class MainActivity : Activity() {
                 super.onDraw(canvas)
                 val cx = width / 2f
                 val cy = height / 2f
-                val outer = dp(14).toFloat()
-                val inner = dp(10).toFloat()
+                val outer = dp(12).toFloat()
+                val inner = dp(8).toFloat()
                 val teeth = android.graphics.Path()
                 for (i in 0 until 24) {
                     val a = Math.toRadians(i * 15.0)
@@ -397,8 +394,7 @@ class MainActivity : Activity() {
         }.apply {
             contentDescription = "Настройки"
             isClickable = true
-            isFocusable = true
-            setOnClickListener { showSettings() }
+            isFocusable = true            setOnClickListener { showSettings() }
         }
         row.addView(settings, LinearLayout.LayoutParams(dp(48), dp(48)))
         content.addView(row)
@@ -497,8 +493,7 @@ class MainActivity : Activity() {
             setTypeface(null, Typeface.BOLD)
             gravity = Gravity.CENTER
             setTextColor(Color.rgb(232, 218, 218))
-            background = android.graphics.drawable.GradientDrawable().apply {
-                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+            background = android.graphics.drawable.GradientDrawable().apply {                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
                 cornerRadius = dp(12).toFloat()
                 setColor(Color.rgb(54, 42, 45))
                 setStroke(dp(1), Color.rgb(126, 55, 49))
@@ -597,8 +592,7 @@ class MainActivity : Activity() {
             "Белозёрское",
             "Волноваха",
             "Горловка",
-            "Горняк",
-            "Дебальцево",
+            "Горняк",            "Дебальцево",
             "Дзержинск (Торецк)",
             "Доброполье",
             "Докучаевск",
@@ -697,8 +691,7 @@ class MainActivity : Activity() {
         promoBanner()
         val cityRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            background = outlinedPanel()
+            gravity = Gravity.CENTER_VERTICAL            background = outlinedPanel()
             setPadding(dp(14), dp(2), dp(10), dp(2))
         }
         val cityIcon = TextView(this).apply {
@@ -798,565 +791,3 @@ class MainActivity : Activity() {
             content.addView(button("Выбрать город") { chooseCity() })
         } else {
             card("Актуальность сведений", "Проверяем опубликованные сообщения. Нет данных — не значит, что отключений нет.")
-            val status = text("Загрузка сведений…", 15f, muted)
-            content.addView(status)
-            val entries = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-            content.addView(entries)
-            fun load() {
-                status.text = "Загрузка сведений…"
-                entries.removeAllViews()
-                val selectedCity = city
-                Thread {
-                    val outcome = try {
-                        // Set the verified HTTPS production API base URL before enabling live data.
-                        val base = getPreferences(MODE_PRIVATE).getString("utility_api_base", "").orEmpty()
-                        require(base.startsWith("https://")) { "Источник данных пока не подключён." }
-                        val url = java.net.URL(base.trimEnd('/') + "/api/outages?kind=electricity&city=" +
-                            java.net.URLEncoder.encode(selectedCity, "UTF-8"))
-                        val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
-                            connectTimeout = 8000
-                            readTimeout = 8000
-                            setRequestProperty("Accept", "application/json")
-                        }
-                        try {
-                            require(conn.responseCode == 200) { "Сервер временно недоступен." }
-                            val raw = conn.inputStream.bufferedReader().use { it.readText() }
-                            val json = org.json.JSONObject(raw)
-                            val rows = json.getJSONArray("outages")
-                            val accepted = mutableListOf<org.json.JSONObject>()
-                            for (i in 0 until rows.length()) {
-                                val item = rows.getJSONObject(i)
-                                if (item.optString("city") == selectedCity &&
-                                    item.optString("kind") == "electricity" &&
-                                    item.optString("verification") == "confirmed" &&
-                                    item.optString("source").isNotBlank() &&
-                                    item.optString("published_at").isNotBlank()) accepted.add(item)
-                            }
-                            accepted
-                        } finally { conn.disconnect() }
-                    } catch (e: Exception) { e }
-                    runOnUiThread {
-                        if (currentPage != "electricity" || city != selectedCity) return@runOnUiThread
-                        when (outcome) {
-                            is Exception -> status.text = outcome.message ?: "Не удалось получить сведения."
-                            is List<*> -> {
-                                status.text = if (outcome.isEmpty()) "Подтверждённых сообщений пока нет. Это не означает отсутствие отключений." else "Подтверждённые сообщения:"
-                                outcome.filterIsInstance<org.json.JSONObject>().forEach { item ->
-                                    val state = when (item.optString("status")) {
-                                        "planned" -> "Плановые работы"
-                                        "active" -> "Аварийное отключение"
-                                        "restored" -> "Электроснабжение восстановлено (по данным источника)"
-                                        else -> "Статус уточняется"
-                                    }
-                                    val addressArray = item.optJSONArray("addresses")
-                                    val addresses = if (addressArray == null) "Адреса уточняются" else
-                                        (0 until addressArray.length()).joinToString(", ") { addressArray.optString(it) }.ifBlank { "Адреса уточняются" }
-                                    val restore = item.optString("expected_restore_at").ifBlank { "не указано" }
-                                    val panel = LinearLayout(this).apply {
-                                        orientation = LinearLayout.VERTICAL
-                                        setPadding(dp(16), dp(12), dp(16), dp(12))
-                                        background = outlinedPanel()
-                                        addView(text(state, 18f, Color.WHITE, true))
-                                        addView(text(addresses, 15f, muted))
-                                        addView(text("Ожидаемое восстановление: $restore", 14f, muted))
-                                        addView(text("Источник: ${item.optString("source")} · ${item.optString("published_at")}", 12f, muted))
-                                    }
-                                    entries.addView(panel, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
-                                }
-                            }
-                        }
-                    }
-                }.start()
-            }
-            content.addView(button("Обновить сведения") { load() })
-            load()
-        }
-        content.addView(button("← На главную") { showHome() })
-    }
-
-    private fun showWater() {
-        currentPage = "water"
-        shell("💧 Вода")
-        content.addView(text("Город: $city", 17f, Color.WHITE, true))
-        if (city == "Выберите город") {
-            card("Выберите город", "Информация об отключениях привязана к населённому пункту.")
-            content.addView(button("Выбрать город") { chooseCity() })
-        } else {
-            card("Актуальность сведений", "Проверяем опубликованные сообщения. Нет данных — не значит, что отключений нет.")
-            val status = text("Загрузка сведений…", 15f, muted)
-            content.addView(status)
-            val entries = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-            content.addView(entries)
-            fun load() {
-                status.text = "Загрузка сведений…"
-                entries.removeAllViews()
-                val selectedCity = city
-                Thread {
-                    val outcome = try {
-                        // Set the verified HTTPS production API base URL before enabling live data.
-                        val base = getPreferences(MODE_PRIVATE).getString("utility_api_base", "").orEmpty()
-                        require(base.startsWith("https://")) { "Источник данных пока не подключён." }
-                        val url = java.net.URL(base.trimEnd('/') + "/api/outages?kind=water&city=" +
-                            java.net.URLEncoder.encode(selectedCity, "UTF-8"))
-                        val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
-                            connectTimeout = 8000
-                            readTimeout = 8000
-                            setRequestProperty("Accept", "application/json")
-                        }
-                        try {
-                            require(conn.responseCode == 200) { "Сервер временно недоступен." }
-                            val raw = conn.inputStream.bufferedReader().use { it.readText() }
-                            val json = org.json.JSONObject(raw)
-                            val rows = json.getJSONArray("outages")
-                            val accepted = mutableListOf<org.json.JSONObject>()
-                            for (i in 0 until rows.length()) {
-                                val item = rows.getJSONObject(i)
-                                if (item.optString("city") == selectedCity &&
-                                    item.optString("kind") == "water" &&
-                                    item.optString("verification") == "confirmed" &&
-                                    item.optString("source").isNotBlank() &&
-                                    item.optString("published_at").isNotBlank()) accepted.add(item)
-                            }
-                            accepted
-                        } finally { conn.disconnect() }
-                    } catch (e: Exception) { e }
-                    runOnUiThread {
-                        if (currentPage != "water" || city != selectedCity) return@runOnUiThread
-                        when (outcome) {
-                            is Exception -> status.text = outcome.message ?: "Не удалось получить сведения."
-                            is List<*> -> {
-                                status.text = if (outcome.isEmpty()) "Подтверждённых сообщений пока нет. Это не означает отсутствие отключений." else "Подтверждённые сообщения:"
-                                outcome.filterIsInstance<org.json.JSONObject>().forEach { item ->
-                                    val state = when (item.optString("status")) {
-                                        "planned" -> "Плановые работы"
-                                        "active" -> "Аварийное отключение"
-                                        "restored" -> "Водоснабжение восстановлено (по данным источника)"
-                                        else -> "Статус уточняется"
-                                    }
-                                    val addressArray = item.optJSONArray("addresses")
-                                    val addresses = if (addressArray == null) "Адреса уточняются" else
-                                        (0 until addressArray.length()).joinToString(", ") { addressArray.optString(it) }.ifBlank { "Адреса уточняются" }
-                                    val restore = item.optString("expected_restore_at").ifBlank { "не указано" }
-                                    val panel = LinearLayout(this).apply {
-                                        orientation = LinearLayout.VERTICAL
-                                        setPadding(dp(16), dp(12), dp(16), dp(12))
-                                        background = outlinedPanel()
-                                        addView(text(state, 18f, Color.WHITE, true))
-                                        addView(text(addresses, 15f, muted))
-                                        addView(text("Ожидаемое восстановление: $restore", 14f, muted))
-                                        addView(text("Источник: ${item.optString("source")} · ${item.optString("published_at")}", 12f, muted))
-                                    }
-                                    entries.addView(panel, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
-                                }
-                            }
-                        }
-                    }
-                }.start()
-            }
-            content.addView(button("Обновить сведения") { load() })
-            load()
-        }
-        content.addView(button("← На главную") { showHome() })
-    }
-
-    private fun showFuel() {
-        currentPage = "fuel"
-        shell("⛽ Топливо")
-        content.addView(text("Общая сводка: Донецк + Макеевка", 17f, Color.WHITE, true))
-        if (city != "Донецк" && city != "Макеевка") {
-            card("Выбран город: $city", "Сводка пока охватывает только Донецк и Макеевку. Выберите один из них.")
-            content.addView(button("Выбрать город") { chooseCity() })
-        } else {
-            card("Статус данных", "Онлайн-источник пока не подключён. Наличие топлива на конкретных АЗС не подтверждено.")
-            listOf("АИ-92", "АИ-95", "Дизель", "Газ").forEach { fuel ->
-                card(fuel, "Нет актуальных подтверждённых сведений")
-            }
-            card("Ограничения и поставки", "Подтверждённых свежих сообщений пока нет. Это не означает, что ограничений нет.")
-            content.addView(text("После подключения источников покажем АЗС, адрес, наличие, цену (если опубликована), время проверки и ссылку на сообщение.", 14f, muted))
-            content.addView(button("Обновить сведения") { showFuel() })
-            content.addView(button("Изменить город") { chooseCity() })
-        }
-        content.addView(button("← На главную") { showHome() })
-    }
-
-    private fun friendlyNewsSource(sourceId: String): String = when (sourceId) {
-        "donetsk_admin" -> "Администрация Донецка"
-        "donetsk_head" -> "Глава Донецка"
-        "makeevka_news" -> "Новости Макеевки"
-        "debaltsevo_admin" -> "Администрация Дебальцево"
-        "debaltsevo_head" -> "Глава Дебальцево"
-        "dokuchaevsk_admin" -> "Администрация Докучаевска"
-        "dokuchaevsk_head" -> "Глава Докучаевска"
-        "gorlovka_admin" -> "Администрация Горловки"
-        "enakievo_admin" -> "Администрация Енакиево"
-        "enakievo_head" -> "Глава Енакиево"
-        "ilovaisk_admin" -> "Администрация Иловайска"
-        "ilovaisk_head" -> "Руководитель Иловайска"
-        "mariupol_admin" -> "Администрация Мариуполя"
-        "mariupol_head" -> "Глава Мариуполя"
-        "snezhnoe_admin" -> "Администрация Снежного"
-        "snezhnoe_head" -> "Глава Снежного"
-        "torez_admin" -> "Администрация Тореза"
-        "khartsyzsk_admin" -> "Администрация Харцызска"
-        "amvrosievka_admin" -> "Администрация Амвросиевки"
-        "amvrosievka_head" -> "Глава Амвросиевки"
-        "volnovakha_admin" -> "Администрация Волновахи"
-        "volnovakha_head" -> "Глава Волновахи"
-        "shakhtarsk_admin" -> "Администрация Шахтёрска"
-        "shakhtarsk_head" -> "Глава Шахтёрска"
-        "novoazovsk_admin" -> "Администрация Новоазовска"
-        "novoazovsk_head" -> "Руководитель Новоазовского округа"
-        "telmanovo_admin" -> "Администрация Тельманово"
-        "starobeshevo_admin" -> "Администрация Старобешево"
-        "volodarsk_admin" -> "Администрация Володарского"
-        "mangush_admin" -> "Администрация Мангуша"
-        "zhdanovka_admin" -> "Администрация Ждановки"
-        "kirovskoe_admin" -> "Администрация Кировского"
-        "yasinovataya_admin" -> "Администрация Ясиноватой"
-        "krasny_liman_admin" -> "Администрация Красного Лимана"
-        "fuel_dnr" -> "Источник по топливу"
-        "benz_dnr" -> "Источник по топливу"
-        "voda_dnr" -> "Источник по водоснабжению"
-        else -> "Официальный источник"
-    }
-
-    private fun showNews() {
-        currentPage = "news"
-        shell("▤ Новости")
-        content.addView(text("Город: $city", 17f, Color.WHITE, true))
-        if (city == "Выберите город") {
-            card("Сначала выберите город", "Лента новостей привязана к выбранному населённому пункту.")
-            content.addView(button("Выбрать город") { chooseCity() })
-        } else {
-            card("Проверенные публикации", "Показываем только сообщения, прошедшие проверку. Пустая лента не означает, что в городе ничего не происходит.")
-            val status = text("Загрузка новостей…", 15f, muted)
-            content.addView(status)
-            val entries = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-            content.addView(entries)
-            fun load() {
-                status.text = "Загрузка новостей…"
-                entries.removeAllViews()
-                val selectedCity = city
-                Thread {
-                    val outcome = try {
-                        val base = getPreferences(MODE_PRIVATE).getString("utility_api_base", "").orEmpty()
-                        require(base.startsWith("https://")) { "Источник новостей пока не подключён." }
-                        val url = java.net.URL(base.trimEnd('/') + "/api/news?city=" +
-                            java.net.URLEncoder.encode(selectedCity, "UTF-8") + "&limit=20")
-                        val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
-                            connectTimeout = 8000
-                            readTimeout = 8000
-                            setRequestProperty("Accept", "application/json")
-                        }
-                        try {
-                            require(conn.responseCode == 200) { "Сервер новостей временно недоступен." }
-                            val json = org.json.JSONObject(conn.inputStream.bufferedReader().use { it.readText() })
-                            val rows = json.getJSONArray("items")
-                            val accepted = mutableListOf<org.json.JSONObject>()
-                            for (i in 0 until rows.length()) {
-                                val item = rows.getJSONObject(i)
-                                val sourceUrl = item.optString("source_url")
-                                val parsedSource = android.net.Uri.parse(sourceUrl)
-                                val sourceHost = parsedSource.host?.lowercase()
-                                val trustedSource = parsedSource.scheme == "https" &&
-                                    parsedSource.userInfo == null &&
-                                    (sourceHost == "t.me" || sourceHost == "max.ru") &&
-                                    parsedSource.path.orEmpty().length > 1
-                                if (item.optString("city") == selectedCity &&
-                                    item.optString("verification") == "confirmed" &&
-                                    trustedSource &&
-                                    item.optString("title").isNotBlank() &&
-                                    item.optString("published_at").isNotBlank()) accepted.add(item)
-                            }
-                            accepted
-                        } finally { conn.disconnect() }
-                    } catch (e: Exception) { e }
-                    runOnUiThread {
-                        if (currentPage != "news" || city != selectedCity) return@runOnUiThread
-                        when (outcome) {
-                            is Exception -> status.text = outcome.message ?: "Не удалось получить новости."
-                            is List<*> -> {
-                                val news = outcome.filterIsInstance<org.json.JSONObject>()
-                                status.text = if (news.isEmpty()) "Подтверждённых публикаций пока нет." else "Публикации: ${news.size}"
-                                news.forEach { item ->
-                                    val panel = LinearLayout(this).apply {
-                                        orientation = LinearLayout.VERTICAL
-                                        setPadding(dp(16), dp(12), dp(16), dp(12))
-                                        background = outlinedPanel()
-                                        addView(text(item.optString("title"), 17f, Color.WHITE, true))
-                                        addView(text(item.optString("summary"), 15f, muted))
-                                        addView(text(friendlyNewsSource(item.optString("source")) + " · " + item.optString("published_at"), 12f, muted))
-                                        addView(button("Открыть оригинал") {
-                                            val sourceUri = android.net.Uri.parse(item.optString("source_url"))
-                                            if (sourceUri.scheme == "https" &&
-                                                sourceUri.userInfo == null &&
-                                                (sourceUri.host?.lowercase() == "t.me" || sourceUri.host?.lowercase() == "max.ru") &&
-                                                sourceUri.path.orEmpty().length > 1) {
-                                                startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, sourceUri))
-                                            } else {
-                                                android.widget.Toast.makeText(this@MainActivity, "Ссылка на источник не прошла проверку.", android.widget.Toast.LENGTH_LONG).show()
-                                            }
-                                        })
-                                    }
-                                    val params = LinearLayout.LayoutParams(-1, -2)
-                                    params.bottomMargin = dp(8)
-                                    entries.addView(panel, params)
-                                }
-                            }
-                        }
-                    }
-                }.start()
-            }
-            load()
-            content.addView(button("Обновить ленту") { load() })
-        }
-        content.addView(button("← На главную") { showHome() })
-    }
-
-    private fun showAnnouncements() {
-        currentPage = "announcements"
-        shell("Частные объявления и реклама")
-        content.addView(text("Объявления жителей, услуги мастеров и реклама местного бизнеса", 16f, muted))
-        val status = text("Загрузка объявлений…", 15f, muted)
-        content.addView(status)
-        val entries = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        content.addView(entries)
-
-        fun load() {
-            status.text = "Загрузка объявлений…"
-            entries.removeAllViews()
-            Thread {
-                val outcome = try {
-                    val base = getPreferences(MODE_PRIVATE)
-                        .getString("utility_api_base", "https://dnrsignal.duckdns.org")
-                        .orEmpty().trim().trimEnd('/')
-                    require(base.startsWith("https://")) { "Нужен HTTPS-адрес API." }
-                    val parsedBase = android.net.Uri.parse(base)
-                    require(!parsedBase.host.isNullOrBlank() && parsedBase.userInfo == null) {
-                        "Некорректный адрес API."
-                    }
-                    val conn = (java.net.URL(base + "/api/announcements").openConnection()
-                        as java.net.HttpURLConnection).apply {
-                        connectTimeout = 8000
-                        readTimeout = 8000
-                        setRequestProperty("Accept", "application/json")
-                    }
-                    try {
-                        require(conn.responseCode == 200) { "Сервер объявлений временно недоступен." }
-                        val json = org.json.JSONObject(conn.inputStream.bufferedReader().use { it.readText() })
-                        val rows = json.getJSONArray("announcements")
-                        val items = mutableListOf<org.json.JSONObject>()
-                        for (i in 0 until rows.length()) {
-                            val item = rows.getJSONObject(i)
-                            if (item.optString("category") != "news" &&
-                                item.optString("title").isNotBlank() &&
-                                item.optString("body").isNotBlank()) items.add(item)
-                        }
-                        items
-                    } finally { conn.disconnect() }
-                } catch (e: Exception) { e }
-                runOnUiThread {
-                    if (currentPage != "announcements") return@runOnUiThread
-                    when (outcome) {
-                        is Exception -> status.text = outcome.message ?: "Не удалось загрузить объявления."
-                        is List<*> -> {
-                            val items = outcome.filterIsInstance<org.json.JSONObject>()
-                            status.text = if (items.isEmpty()) {
-                                "Пока нет опубликованных объявлений."
-                            } else {
-                                "Опубликованные объявления: ${items.size}"
-                            }
-                            items.forEach { item ->
-                                val category = when (item.optString("category")) {
-                                    "general" -> "Общее"
-                                    "electricity" -> "Электроснабжение"
-                                    "water" -> "Водоснабжение"
-                                    "news" -> "Новости"
-                                    "emergency" -> "Важное"
-                                    else -> "Объявление"
-                                }
-                                val panel = LinearLayout(this).apply {
-                                    orientation = LinearLayout.VERTICAL
-                                    setPadding(dp(16), dp(12), dp(16), dp(12))
-                                    background = outlinedPanel()
-                                    addView(text(category.uppercase(), 12f, accent, true))
-                                    addView(text(item.optString("title"), 19f, Color.WHITE, true))
-                                    addView(text(item.optString("body"), 15f, muted))
-                                    val published = item.optString("published_at")
-                                    if (published.isNotBlank()) addView(text("Опубликовано: $published", 12f, muted))
-                                    val actionUrl = item.optString("action_url")
-                                    val actionUri = android.net.Uri.parse(actionUrl)
-                                    if (actionUri.scheme == "https" && !actionUri.host.isNullOrBlank() &&
-                                        actionUri.userInfo == null) {
-                                        addView(button("Подробнее") {
-                                            startActivity(android.content.Intent(
-                                                android.content.Intent.ACTION_VIEW, actionUri))
-                                        })
-                                    }
-                                    val phone = item.optString("action_phone").trim()
-                                    if (phone.isNotBlank() && phone.matches(Regex("^[+0-9() -]{5,24}$"))) {
-                                        addView(button("Позвонить: $phone") {
-                                            startActivity(android.content.Intent(
-                                                android.content.Intent.ACTION_DIAL,
-                                                android.net.Uri.parse("tel:" + phone.filter { it.isDigit() || it == '+' })))
-                                        })
-                                    }
-                                }
-                                entries.addView(panel, LinearLayout.LayoutParams(-1, -2).apply {
-                                    bottomMargin = dp(8)
-                                })
-                            }
-                        }
-                    }
-                }
-            }.start()
-        }
-        load()
-        content.addView(button("Обновить объявления") { load() })
-        content.addView(button("← На главную") { showHome() })
-    }
-
-    private fun showOfficialChannels() {
-        currentPage = "channels"
-        shell("Официальные каналы")
-        content.addView(text("Город: $city", 17f, Color.WHITE, true))
-        content.addView(text("Ссылки ведут на опубликованные каналы администраций и руководителей. Открытие происходит в Telegram или MAX. Наличие ссылки не означает автоматическую загрузку публикаций в приложение.", 14f, muted))
-
-        data class OfficialLink(val organization: String, val telegram: String? = null, val max: String? = null)
-        val links = when (city) {
-            "Донецк" -> listOf(
-                OfficialLink("Администрация города", "https://t.me/gorodDonetsk"),
-                OfficialLink("Глава города", "https://t.me/kulemzin_donetsk", "https://max.ru/kulemzin_donetsk")
-            )
-            "Макеевка" -> listOf(OfficialLink("Администрация города", "https://t.me/Novosti_Makeevka", "https://max.ru/makeevka_ru"))
-            "Дебальцево" -> listOf(
-                OfficialLink("Администрация города", "https://t.me/admDebaltsevo"),
-                OfficialLink("Глава города", "https://t.me/glavadebaltsevo")
-            )
-            "Докучаевск" -> listOf(
-                OfficialLink("Администрация города", "https://t.me/Dokuchaevsk_admin", "https://max.ru/id9306004432_gos"),
-                OfficialLink("Глава города", "https://t.me/dokuchaevsk", "https://max.ru/id9306004432_gos2")
-            )
-            "Горловка" -> listOf(OfficialLink("Администрация города", "https://t.me/Gorlowka_now", "https://max.ru/gorlowka_now"))
-            "Енакиево" -> listOf(
-                OfficialLink("Администрация города", "https://t.me/Enakievo_official", "https://max.ru/enakievo_official"),
-                OfficialLink("Глава города", "https://t.me/IgorMartynov_enk")
-            )
-            "Иловайск" -> listOf(
-                OfficialLink("Администрация городского округа", "https://t.me/ilovaisk_onlain", "https://max.ru/id9304022980_gos"),
-                OfficialLink("Руководитель городского округа", "https://t.me/dz_ilov_gorokrug")
-            )
-            "Мариуполь" -> listOf(
-                OfficialLink("Администрация города", "https://t.me/nmrpl"),
-                OfficialLink("Глава города", "https://t.me/morgun_ov")
-            )
-            "Снежное" -> listOf(
-                OfficialLink("Администрация города", "https://t.me/Snijne", "https://max.ru/id9304022972_gos"),
-                OfficialLink("Глава города", "https://t.me/Ermakov_ESV")
-            )
-            "Торез (Чистяково)" -> listOf(OfficialLink("Администрация города", "https://t.me/torez_admin", "https://max.ru/id9304022958_gos"))
-            "Харцызск" -> listOf(OfficialLink("Администрация города", "https://t.me/khartsyzsk_press_office"))
-            "Амвросиевка" -> listOf(
-                OfficialLink("Администрация округа", "https://t.me/amvr_admin", "https://max.ru/id9304022919_gos"),
-                OfficialLink("Глава администрации", "https://t.me/Lyzov_amvrosievka", "https://max.ru/join/HIkfVJh2KB7pFxakfgjwwaGirL1L-t9kZISWlNE96XE")
-            )
-            "Волноваха" -> listOf(
-                OfficialLink("Администрация округа", "https://t.me/volnovahadnr", "https://max.ru/id9306004440_gos"),
-                OfficialLink("Глава администрации", "https://t.me/kazinchenko", "https://max.ru/id9306004440_gos2")
-            )
-            "Шахтёрск" -> listOf(
-                OfficialLink("Администрация округа", "https://t.me/AGShahtersk", "https://max.ru/mo_shahtersk"),
-                OfficialLink("Глава администрации", "https://t.me/shatov_av_agsh")
-            )
-            "Новоазовск" -> listOf(
-                OfficialLink("Администрация округа", "https://t.me/novoazovsk_adm", "https://max.ru/id9305011204_gos"),
-                OfficialLink("Канал руководителя округа", "https://t.me/novoazovskiy_region")
-            )
-            "Тельманово" -> listOf(OfficialLink("Администрация округа", "https://t.me/adm_telmanovskogo_rajona", "https://max.ru/id9305011162_gos"))
-            "Старобешево" -> listOf(OfficialLink("Администрация округа", "https://t.me/starobeshevo1923"))
-            "Володарское" -> listOf(OfficialLink("Администрация округа", "https://t.me/volodinfo"))
-            "Мангуш" -> listOf(OfficialLink("Администрация округа", "https://t.me/Mangush_mo"))
-            "Ждановка" -> listOf(OfficialLink("Администрация города", "https://t.me/adm_zhdanovka"))
-            "Кировское (Крестовка)" -> listOf(OfficialLink("Администрация города", "https://t.me/gorod_kirovskoe"))
-            "Ясиноватая" -> listOf(OfficialLink("Администрация округа", "https://t.me/gromko_yas"))
-            "Красный Лиман" -> listOf(OfficialLink("Администрация округа", "https://t.me/kr_liman_admin"))
-            else -> emptyList()
-        }
-
-        if (links.isEmpty()) {
-            card("Проверенные ссылки пока не добавлены", "Для выбранного населённого пункта мы ещё не подтвердили официальные каналы. Не подставляем случайные ссылки.")
-        } else {
-            links.forEach { link ->
-                val panel = LinearLayout(this).apply {
-                    orientation = LinearLayout.VERTICAL
-                    setPadding(dp(14), dp(8), dp(14), dp(10))
-                    background = outlinedPanel()
-                }
-                panel.addView(text(link.organization, 16f, Color.WHITE, true))
-                val actions = LinearLayout(this).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    gravity = Gravity.CENTER_VERTICAL
-                }
-                link.telegram?.let { url ->
-                    actions.addView(button("Открыть Telegram") {
-                        startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)))
-                    }, LinearLayout.LayoutParams(0, -2, 1f).apply { rightMargin = dp(6) })
-                }
-                link.max?.let { url ->
-                    actions.addView(button("Открыть MAX") {
-                        startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)))
-                    }, LinearLayout.LayoutParams(0, -2, 1f))
-                }
-                panel.addView(actions, LinearLayout.LayoutParams(-1, -2))
-                if (link.max == null) panel.addView(text("Подтверждённая ссылка MAX пока не добавлена.", 12f, muted))
-                content.addView(panel, LinearLayout.LayoutParams(-1, -2).apply {
-                    topMargin = dp(6)
-                    bottomMargin = dp(4)
-                })
-            }
-        }
-        content.addView(button("← На главную") { showHome() })
-    }
-
-    private fun showCommunityChat() {
-        currentPage = "chat"
-        shell("Онлайн-чат")
-        if (city == "Выберите город") {
-            content.addView(text("Для входа в городской чат сначала выберите город.", 16f, muted))
-            content.addView(button("Выбрать город") { chooseCity() })
-        } else {
-            content.addView(text("Общий чат: $city", 21f, Color.WHITE, true))
-            content.addView(text("Здесь жители выбранного города смогут общаться друг с другом.", 16f, muted))
-            card("Правила и модерация", "Автоматический фильтр спама, жалобы на сообщения и проверка модератором. Нарушения могут приводить к ограничению доступа.")
-            content.addView(text("Отправка сообщений станет доступна после подключения сервера и авторизации. Сейчас сообщения не отправляются.", 15f, muted))
-        }
-        content.addView(button("← На главную") { showHome() })
-    }
-
-    private fun showSos() {
-        currentPage = "sos"
-        shell("Экстренная помощь")
-        content.addView(text("Выберите действие. Ничего не отправляется автоматически.", 16f, muted))
-        content.addView(button("Позвонить 112") {
-            android.app.AlertDialog.Builder(this)
-                .setTitle("Открыть набор номера 112?")
-                .setMessage("Вызов не будет начат автоматически.")
-                .setNegativeButton("Отмена", null)
-                .setPositiveButton("Открыть") { _, _ ->
-                    startActivity(android.content.Intent(android.content.Intent.ACTION_DIAL,
-                        android.net.Uri.parse("tel:112")))
-                }.show()
-        })
-        content.addView(button("Сообщить близким") {
-            android.app.AlertDialog.Builder(this)
-                .setTitle("Сообщение близким")
-                .setMessage("Откроется приложение сообщений. Выберите получателя и подтвердите отправку самостоятельно. Геолокация не передаётся без разрешения.")
-                .setNegativeButton("Отмена", null)
-                .setPositiveButton("Продолжить") { _, _ ->
-                    startActivity(android.content.Intent(android.content.Intent.ACTION_SENDTO,
-                        android.net.Uri.parse("smsto:")).putExtra("sms_body", "Мне нужна помощь. Пожалуйста, свяжитесь со мной."))
-                }.show()
-        })
-        content.addView(button("← На главную") { showHome() })
-    }
-}
