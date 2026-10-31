@@ -1176,7 +1176,7 @@ class MainActivity : Activity() {
                                         orientation = LinearLayout.VERTICAL
                                         setPadding(dp(16), dp(12), dp(16), dp(12))
                                         background = outlinedPanel()
-                                        addView(text("${item.optString(\"city\")} · $state", 18f, when (item.optString("status")) { "active" -> Color.rgb(239,83,80); "restored" -> Color.rgb(102,187,106); else -> Color.WHITE }, true))
+                                        addView(text("${item.optString("city")} · $state", 18f, when (item.optString("status")) { "active" -> Color.rgb(239,83,80); "restored" -> Color.rgb(102,187,106); else -> Color.WHITE }, true))
                                         addView(text(addresses, 15f, muted))
                                         addView(text("Ожидаемое восстановление: $restore", 14f, muted))
                                         addView(text("Источник: ${item.optString("source")} · ${item.optString("published_at")}", 12f, muted))
@@ -1271,7 +1271,7 @@ class MainActivity : Activity() {
                                         orientation = LinearLayout.VERTICAL
                                         setPadding(dp(16), dp(12), dp(16), dp(12))
                                         background = outlinedPanel()
-                                        addView(text("${item.optString(\"city\")} · $state", 18f, when (item.optString("status")) { "active" -> Color.rgb(239,83,80); "restored" -> Color.rgb(102,187,106); else -> Color.WHITE }, true))
+                                        addView(text("${item.optString("city")} · $state", 18f, when (item.optString("status")) { "active" -> Color.rgb(239,83,80); "restored" -> Color.rgb(102,187,106); else -> Color.WHITE }, true))
                                         addView(text(addresses, 15f, muted))
                                         addView(text("Ожидаемое восстановление: $restore", 14f, muted))
                                         addView(text("Источник: ${item.optString("source")} · ${item.optString("published_at")}", 12f, muted))
