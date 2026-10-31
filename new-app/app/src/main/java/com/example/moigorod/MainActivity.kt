@@ -893,25 +893,21 @@ class MainActivity : Activity() {
         val token = getPreferences(MODE_PRIVATE).getString("account_token", null)
         if (token == null) { showAccount(); return }
         val name = accountField("Имя", android.text.InputType.TYPE_CLASS_TEXT)
-        val selected = text("Город: " + city, 16f, muted)
         val feedback = text("Загружаем профиль…", 14f, muted)
         content.addView(name)
-        content.addView(selected)
-        content.addView(button("Выбрать город") { chooseCity { selected.text = "Город: " + city } })
         content.addView(feedback)
         accountRequest("/api/account/me", null, token) { code, json ->
             if (currentPage != "edit_profile") return@accountRequest
             if (code == 200) {
                 name.setText(json.optString("display_name"))
                 city = json.optString("city", city)
-                selected.text = "Город: " + city
                 feedback.text = "Логин и телефон не изменяются."
             } else feedback.text = "Не удалось загрузить профиль"
         }
         content.addView(button("Сохранить изменения") {
             val value = name.text.toString().trim()
-            if (value.isEmpty() || city == "Выберите город") {
-                feedback.text = "Укажите имя и город"
+            if (value.isEmpty()) {
+                feedback.text = "Укажите имя"
             } else {
                 feedback.text = "Сохраняем…"
                 val payload = org.json.JSONObject().put("display_name", value).put("city", city)
@@ -964,13 +960,10 @@ class MainActivity : Activity() {
         val phone = accountField("Телефон: +79991234567", android.text.InputType.TYPE_CLASS_PHONE)
         val name = accountField("Ваше имя", android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES)
         content.addView(login); content.addView(pass); content.addView(phone); content.addView(name)
-        val selectedCity = text("Город: " + city, 15f, muted)
-        content.addView(selectedCity)
-        content.addView(button("Выбрать город") { chooseCity { selectedCity.text = "Город: " + city } })
         val feedback = text("", 14f, muted)
         content.addView(button("Зарегистрироваться") {
-            if (pass.text.length < 6 || city == "Выберите город" || name.text.toString().isBlank()) {
-                feedback.text = "Укажите имя, город и пароль не короче 6 символов"
+            if (pass.text.length < 6 || name.text.toString().isBlank()) {
+                feedback.text = "Укажите имя и пароль не короче 6 символов"
             } else {
                 val payload = org.json.JSONObject().put("username", login.text.toString().trim())
                     .put("password", pass.text.toString()).put("phone", phone.text.toString().trim())
