@@ -772,39 +772,9 @@ class MainActivity : Activity() {
     private fun showSettings() {
         currentPage = "settings"
         shell("⚙ Настройки")
-        content.addView(text("Источник данных", 18f, Color.WHITE, true))
-        content.addView(text("HTTPS-адрес API сервера. По умолчанию подключён проверенный сервер объявлений.", 14f, muted))
-        val current = getPreferences(MODE_PRIVATE).getString("utility_api_base", "https://dnrsignal.duckdns.org").orEmpty()
-        val field = EditText(this).apply {
-            setText(current)
-            hint = "https://dnrsignal.duckdns.org"
-            isSingleLine = true
-            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_URI
-            setTextColor(Color.WHITE)
-            setHintTextColor(muted)
-            setPadding(dp(12), dp(10), dp(12), dp(10))
-            background = outlinedPanel()
-        }
-        content.addView(field, LinearLayout.LayoutParams(-1, dp(52)).apply { topMargin = dp(10) })
-        content.addView(button("Сохранить адрес") {
-            val value = field.text.toString().trim().trimEnd('/')
-            val uri = try { android.net.Uri.parse(value) } catch (_: Exception) { null }
-            if (!value.startsWith("https://") || uri?.host.isNullOrBlank()) {
-                android.widget.Toast.makeText(this, "Нужен корректный HTTPS-адрес сервера.", android.widget.Toast.LENGTH_LONG).show()
-            } else {
-                getPreferences(MODE_PRIVATE).edit().putString("utility_api_base", value).apply()
-                android.widget.Toast.makeText(this, "Адрес сохранён.", android.widget.Toast.LENGTH_SHORT).show()
-                showSettings()
-            }
-        })
-        content.addView(button("Очистить адрес") {
-            getPreferences(MODE_PRIVATE).edit().remove("utility_api_base").apply()
-            showSettings()
-        })
         content.addView(button("Личный кабинет") { showAccount() })
         content.addView(button("← На главную") { showHome() })
     }
-
 
     private fun accountField(hintText: String, type: Int): EditText = EditText(this).apply {
         hint = hintText
