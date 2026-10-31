@@ -1193,7 +1193,7 @@ class MainActivity : Activity() {
                                                                 orientation = LinearLayout.VERTICAL
                                                                 setBackgroundColor(Color.BLACK)
                                                                 addView(web, LinearLayout.LayoutParams(-1, dp(260)))
-                                                                addView(button("Открыть оригинал") { openUrl(originalMedia.toString()) })
+                                                                addView(button("Открыть оригинал") { startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, originalMedia)) })
                                                                 addView(button("Закрыть") { dialog.dismiss() })
                                                             }
                                                             dialog.setContentView(frame)
