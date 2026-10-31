@@ -820,39 +820,71 @@ class MainActivity : Activity() {
         }.start()
     }
 
+    private fun accountMenuRow(symbol: String, title: String, subtitle: String, action: () -> Unit) {
+        val line = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = android.view.Gravity.CENTER_VERTICAL
+            setPadding(dp(14), dp(12), dp(14), dp(12))
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setColor(surface)
+                cornerRadius = dp(14).toFloat()
+            }
+            isClickable = true
+            setOnClickListener { action() }
+        }
+        line.addView(text(symbol, 21f, accent, true), LinearLayout.LayoutParams(dp(36), -2))
+        val labels = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        labels.addView(text(title, 16f, Color.WHITE, true))
+        labels.addView(text(subtitle, 12f, muted))
+        line.addView(labels, LinearLayout.LayoutParams(0, -2, 1f))
+        line.addView(text("›", 24f, muted))
+        content.addView(line, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(7) })
+    }
+
     private fun showAccount() {
         currentPage = "account"
-        shell("Личный кабинет")
+        shell("Профиль")
         val prefs = getPreferences(MODE_PRIVATE)
         val token = prefs.getString("account_token", null)
         if (token != null) {
-            val info = text("Загрузка профиля…", 16f, muted)
-            content.addView(info)
+            val name = text("Загрузка…", 23f, Color.WHITE, true)
+            val detail = text("", 14f, muted)
+            val header = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(16), dp(17), dp(16), dp(17))
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    setColor(surface)
+                    cornerRadius = dp(16).toFloat()
+                }
+                addView(name)
+                addView(detail)
+                setOnClickListener { showEditProfile() }
+            }
+            content.addView(header, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(14); bottomMargin = dp(13) })
             accountRequest("/api/account/me", null, token) { code, json ->
                 if (currentPage != "account") return@accountRequest
                 if (code == 200) {
-                    info.text = "Здравствуйте, " + json.optString("display_name") + "!"
-                    card("Мой профиль", "Логин: " + json.optString("username") +
-                        "\nИмя: " + json.optString("display_name") +
-                        "\nГород: " + json.optString("city") +
-                        "\nТелефон: скрыт от других пользователей") { showEditProfile() }
+                    name.text = json.optString("display_name")
+                    detail.text = "@" + json.optString("username") + "  ·  " + json.optString("city") + "  ·  Изменить ›"
                 } else {
-                    info.text = "Не удалось загрузить профиль (код " + code + ")."
+                    name.text = "Не удалось загрузить профиль"
+                    detail.text = "Код " + code
                     if (code == 401) {
                         prefs.edit().remove("account_token").apply()
                         showAccount()
                     }
                 }
             }
-            card("Мои сообщения", "Личные переписки — подключим после запуска защищённого сервера сообщений.") {
+            accountMenuRow("✎", "Редактировать профиль", "Имя и город") { showEditProfile() }
+            accountMenuRow("✉", "Сообщения", "Скоро появятся личные переписки") {
                 showAccountNotice("Мои сообщения", "Переписки пока не подключены. Сообщения не отправляются.")
             }
-            card("Городской чат", "Общение с жителями выбранного города.") { showCommunityChat() }
-            card("Уведомления", "Настройте оповещения на этом устройстве.") { showAccountPreferences() }
-            card("Приватность", "Ваш телефон не показывается другим пользователям.") {
+            accountMenuRow("◉", "Городской чат", "Общение с жителями") { showCommunityChat() }
+            accountMenuRow("♧", "Уведомления", "Ваши предпочтения") { showAccountPreferences() }
+            accountMenuRow("◇", "Приватность", "Телефон скрыт от других") {
                 showAccountNotice("Приватность", "Телефон используется только для регистрации и пока не подтверждён SMS. Другим пользователям он не показывается.")
             }
-            content.addView(button("Выйти из аккаунта") {
+            content.addView(button("Выйти") {
                 accountRequest("/api/account/logout", org.json.JSONObject(), token) { _, _ -> }
                 prefs.edit().remove("account_token").apply()
                 showAccount()
