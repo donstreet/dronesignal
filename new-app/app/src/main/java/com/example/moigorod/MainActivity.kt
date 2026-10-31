@@ -1113,8 +1113,8 @@ class MainActivity : Activity() {
     private fun showElectricity() {
         currentPage = "electricity"
         shell("⚡ Свет")
-        content.addView(text("Город: $city", 17f, Color.WHITE, true))
-        if (city == "Выберите город") {
+        content.addView(text("Донецк · Макеевка", 17f, Color.WHITE, true))
+        if (false) {
             card("Выберите город", "Информация об отключениях привязана к населённому пункту.")
             content.addView(button("Выбрать город") { chooseCity() })
         } else {
@@ -1132,8 +1132,7 @@ class MainActivity : Activity() {
                         // Set the verified HTTPS production API base URL before enabling live data.
                         val base = getPreferences(MODE_PRIVATE).getString("utility_api_base", "https://dnrsignal.duckdns.org").orEmpty()
                         require(base.startsWith("https://")) { "Источник данных пока не подключён." }
-                        val url = java.net.URL(base.trimEnd('/') + "/api/outages?kind=electricity&city=" +
-                            java.net.URLEncoder.encode(selectedCity, "UTF-8"))
+                        val url = java.net.URL(base.trimEnd('/') + "/api/utility-feed?kind=electricity&limit=100")
                         val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
                             connectTimeout = 8000
                             readTimeout = 8000
@@ -1143,13 +1142,13 @@ class MainActivity : Activity() {
                             require(conn.responseCode == 200) { "Сервер временно недоступен." }
                             val raw = conn.inputStream.bufferedReader().use { it.readText() }
                             val json = org.json.JSONObject(raw)
-                            val rows = json.getJSONArray("outages")
+                            val rows = json.getJSONArray("events")
                             val accepted = mutableListOf<org.json.JSONObject>()
                             for (i in 0 until rows.length()) {
                                 val item = rows.getJSONObject(i)
-                                if (item.optString("city") == selectedCity &&
+                                if (item.optString("city") in listOf("Донецк", "Макеевка") &&
                                     item.optString("kind") == "electricity" &&
-                                    item.optString("verification") == "confirmed" &&
+                                    
                                     item.optString("source").isNotBlank() &&
                                     item.optString("published_at").isNotBlank()) accepted.add(item)
                             }
@@ -1157,7 +1156,7 @@ class MainActivity : Activity() {
                         } finally { conn.disconnect() }
                     } catch (e: Exception) { e }
                     runOnUiThread {
-                        if (currentPage != "electricity" || city != selectedCity) return@runOnUiThread
+                        if (currentPage != "electricity") return@runOnUiThread
                         when (outcome) {
                             is Exception -> status.text = outcome.message ?: "Не удалось получить сведения."
                             is List<*> -> {
@@ -1177,7 +1176,7 @@ class MainActivity : Activity() {
                                         orientation = LinearLayout.VERTICAL
                                         setPadding(dp(16), dp(12), dp(16), dp(12))
                                         background = outlinedPanel()
-                                        addView(text(state, 18f, Color.WHITE, true))
+                                        addView(text("${item.optString(\"city\")} · $state", 18f, when (item.optString("status")) { "active" -> Color.rgb(239,83,80); "restored" -> Color.rgb(102,187,106); else -> Color.WHITE }, true))
                                         addView(text(addresses, 15f, muted))
                                         addView(text("Ожидаемое восстановление: $restore", 14f, muted))
                                         addView(text("Источник: ${item.optString("source")} · ${item.optString("published_at")}", 12f, muted))
@@ -1196,7 +1195,7 @@ class MainActivity : Activity() {
             val refreshHandler = android.os.Handler(android.os.Looper.getMainLooper())
             val refreshTask = object : Runnable {
                 override fun run() {
-                    if (currentPage != refreshPage || city != refreshCity) return
+                    if (currentPage != refreshPage) return
                     load()
                     refreshHandler.postDelayed(this, 60_000L)
                 }
@@ -1209,8 +1208,8 @@ class MainActivity : Activity() {
     private fun showWater() {
         currentPage = "water"
         shell("💧 Вода")
-        content.addView(text("Город: $city", 17f, Color.WHITE, true))
-        if (city == "Выберите город") {
+        content.addView(text("Донецк · Макеевка", 17f, Color.WHITE, true))
+        if (false) {
             card("Выберите город", "Информация об отключениях привязана к населённому пункту.")
             content.addView(button("Выбрать город") { chooseCity() })
         } else {
@@ -1228,8 +1227,7 @@ class MainActivity : Activity() {
                         // Set the verified HTTPS production API base URL before enabling live data.
                         val base = getPreferences(MODE_PRIVATE).getString("utility_api_base", "https://dnrsignal.duckdns.org").orEmpty()
                         require(base.startsWith("https://")) { "Источник данных пока не подключён." }
-                        val url = java.net.URL(base.trimEnd('/') + "/api/outages?kind=water&city=" +
-                            java.net.URLEncoder.encode(selectedCity, "UTF-8"))
+                        val url = java.net.URL(base.trimEnd('/') + "/api/utility-feed?kind=water&limit=100")
                         val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
                             connectTimeout = 8000
                             readTimeout = 8000
@@ -1239,13 +1237,13 @@ class MainActivity : Activity() {
                             require(conn.responseCode == 200) { "Сервер временно недоступен." }
                             val raw = conn.inputStream.bufferedReader().use { it.readText() }
                             val json = org.json.JSONObject(raw)
-                            val rows = json.getJSONArray("outages")
+                            val rows = json.getJSONArray("events")
                             val accepted = mutableListOf<org.json.JSONObject>()
                             for (i in 0 until rows.length()) {
                                 val item = rows.getJSONObject(i)
-                                if (item.optString("city") == selectedCity &&
+                                if (item.optString("city") in listOf("Донецк", "Макеевка") &&
                                     item.optString("kind") == "water" &&
-                                    item.optString("verification") == "confirmed" &&
+                                    
                                     item.optString("source").isNotBlank() &&
                                     item.optString("published_at").isNotBlank()) accepted.add(item)
                             }
@@ -1253,7 +1251,7 @@ class MainActivity : Activity() {
                         } finally { conn.disconnect() }
                     } catch (e: Exception) { e }
                     runOnUiThread {
-                        if (currentPage != "water" || city != selectedCity) return@runOnUiThread
+                        if (currentPage != "water") return@runOnUiThread
                         when (outcome) {
                             is Exception -> status.text = outcome.message ?: "Не удалось получить сведения."
                             is List<*> -> {
@@ -1273,7 +1271,7 @@ class MainActivity : Activity() {
                                         orientation = LinearLayout.VERTICAL
                                         setPadding(dp(16), dp(12), dp(16), dp(12))
                                         background = outlinedPanel()
-                                        addView(text(state, 18f, Color.WHITE, true))
+                                        addView(text("${item.optString(\"city\")} · $state", 18f, when (item.optString("status")) { "active" -> Color.rgb(239,83,80); "restored" -> Color.rgb(102,187,106); else -> Color.WHITE }, true))
                                         addView(text(addresses, 15f, muted))
                                         addView(text("Ожидаемое восстановление: $restore", 14f, muted))
                                         addView(text("Источник: ${item.optString("source")} · ${item.optString("published_at")}", 12f, muted))
@@ -1292,7 +1290,7 @@ class MainActivity : Activity() {
             val refreshHandler = android.os.Handler(android.os.Looper.getMainLooper())
             val refreshTask = object : Runnable {
                 override fun run() {
-                    if (currentPage != refreshPage || city != refreshCity) return
+                    if (currentPage != refreshPage) return
                     load()
                     refreshHandler.postDelayed(this, 60_000L)
                 }
