@@ -1161,7 +1161,47 @@ class MainActivity : Activity() {
                                                     val directFile = originalMedia.path.orEmpty().lowercase().let { path ->
                                                         path.endsWith(".mp4") || path.endsWith(".webm") || path.endsWith(".3gp") || path.endsWith(".m3u8")
                                                     }
-                                                    if (directFile) {
+                                                    val mediaHost = originalMedia.host.orEmpty().lowercase()
+                                                    val youtubeId = when {
+                                                        mediaHost in listOf("youtube.com", "www.youtube.com", "m.youtube.com") && originalMedia.path == "/watch" ->
+                                                            originalMedia.getQueryParameter("v")
+                                                        mediaHost in listOf("youtube.com", "www.youtube.com", "m.youtube.com") && originalMedia.path.orEmpty().startsWith("/shorts/") ->
+                                                            originalMedia.pathSegments.getOrNull(1)
+                                                        mediaHost == "youtu.be" -> originalMedia.pathSegments.firstOrNull()
+                                                        else -> null
+                                                    }?.takeIf { it.matches(Regex("[A-Za-z0-9_-]{11}")) }
+                                                    val vkVideo = mediaHost in listOf("vk.com", "www.vk.com", "m.vk.com", "vkvideo.ru", "www.vkvideo.ru") &&
+                                                        originalMedia.path.orEmpty().matches(Regex("/(?:video-?[0-9]+_[0-9]+|clip-?[0-9]+_[0-9]+)/?"))
+                                                    if (youtubeId != null || vkVideo) {
+                                                        addView(button("▶ Смотреть видео") {
+                                                            val embed = if (youtubeId != null) "https://www.youtube-nocookie.com/embed/$youtubeId" else originalMedia.toString()
+                                                            val dialog = android.app.Dialog(this@MainActivity)
+                                                            val web = android.webkit.WebView(this@MainActivity).apply {
+                                                                settings.javaScriptEnabled = true
+                                                                settings.domStorageEnabled = true
+                                                                settings.allowFileAccess = false
+                                                                settings.allowContentAccess = false
+                                                                webViewClient = object : android.webkit.WebViewClient() {
+                                                                    override fun shouldOverrideUrlLoading(view: android.webkit.WebView?, request: android.webkit.WebResourceRequest?): Boolean {
+                                                                        val host = request?.url?.host.orEmpty().lowercase()
+                                                                        return host !in listOf("youtube-nocookie.com", "www.youtube-nocookie.com", "youtube.com", "www.youtube.com", "googlevideo.com", "vk.com", "www.vk.com", "vkvideo.ru", "www.vkvideo.ru")
+                                                                    }
+                                                                }
+                                                                loadUrl(embed)
+                                                            }
+                                                            val frame = LinearLayout(this@MainActivity).apply {
+                                                                orientation = LinearLayout.VERTICAL
+                                                                setBackgroundColor(Color.BLACK)
+                                                                addView(web, LinearLayout.LayoutParams(-1, dp(260)))
+                                                                addView(button("Открыть оригинал") { openUrl(originalMedia.toString()) })
+                                                                addView(button("Закрыть") { dialog.dismiss() })
+                                                            }
+                                                            dialog.setContentView(frame)
+                                                            dialog.setOnDismissListener { web.stopLoading(); web.destroy() }
+                                                            dialog.show()
+                                                            dialog.window?.setLayout(-1, -2)
+                                                        })
+                                                    } else if (directFile) {
                                                         addView(button("▶ Смотреть здесь") {
                                                             val dialog = android.app.Dialog(this@MainActivity)
                                                             val video = android.widget.VideoView(this@MainActivity)
