@@ -751,7 +751,7 @@ class MainActivity : Activity() {
                 when (item.second) {
                     "Каналы" -> showOfficialChannels()
                     "Транспорт" -> showPage("Транспорт", "Расписания автобусов, изменения маршрутов и транспортные сообщения для города: $city. Актуальные данные появятся после подключения проверенных источников.")
-                    "Новости ЖКХ" -> showPage("Новости ЖКХ", "Аварии на сетях, ремонт дорог, уборка улиц, вывоз мусора и благоустройство в городе: $city. Графики отключения света и воды остаются в отдельных разделах.")
+                    "Новости ЖКХ" -> showHousing()
                     else -> showPage(item.second, "Сведения появятся после подключения справочника.")
                 }
             }, LinearLayout.LayoutParams(dp(100), dp(84)).apply { rightMargin = dp(5) })
@@ -1016,6 +1016,98 @@ class MainActivity : Activity() {
         })
         content.addView(feedback)
         content.addView(button("← К входу") { showAccount() })
+    }
+
+
+    private fun showHousing() {
+        currentPage = "housing"
+        shell("🔧 ЖКХ")
+        content.addView(text("Коммунальные события и новости всех городов", 17f, Color.WHITE, true))
+        card("Актуальность сведений", "Публикуются подтверждённые сообщения. Отсутствие сообщений не означает, что отключений нет.")
+        val status = text("Загрузка…", 15f, muted)
+        content.addView(status)
+        val entries = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        content.addView(entries)
+        var filter = "all"
+        fun render(rows: List<org.json.JSONObject>) {
+            entries.removeAllViews()
+            val filtered = rows.filter { filter == "all" || when (filter) {
+                "news" -> it.optString("category") == "housing_news"
+                "active" -> it.optString("status") == "active"
+                "restored" -> it.optString("status") == "restored"
+                "planned" -> it.optString("status") == "planned"
+                else -> true
+            } }
+            status.text = if (filtered.isEmpty()) "Подтверждённых сообщений в выбранной категории пока нет." else "Подтверждённых публикаций: ${filtered.size}"
+            filtered.forEach { item ->
+                val category = item.optString("category")
+                val state = when (item.optString("status")) {
+                    "active" -> "Отключение"
+                    "restored" -> "Восстановлено (по сообщению источника)"
+                    "planned" -> "Плановые работы"
+                    else -> "Новость ЖКХ"
+                }
+                val color = when (item.optString("status")) {
+                    "active" -> Color.rgb(239, 83, 80)
+                    "restored" -> Color.rgb(102, 187, 106)
+                    else -> muted
+                }
+                val panel = LinearLayout(this).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(dp(16), dp(12), dp(16), dp(12))
+                    background = outlinedPanel()
+                    addView(text("${item.optString("city")} · $state", 15f, color, true))
+                    addView(text(item.optString("title"), 17f, Color.WHITE, true))
+                    addView(text(if (category == "housing_news") item.optString("summary") else item.optString("details"), 14f, muted))
+                    addView(text("Источник: ${item.optString("source_url")} · ${item.optString("published_at")}", 12f, muted))
+                }
+                entries.addView(panel, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
+            }
+        }
+        var cached = emptyList<org.json.JSONObject>()
+        val filters = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        listOf("all" to "Все", "active" to "Отключения", "restored" to "Восстановлено",
+            "planned" to "Плановые работы", "news" to "Новости ЖКХ").forEach { (key, label) ->
+            filters.addView(button(label) { filter = key; render(cached) })
+        }
+        content.addView(filters)
+        fun load() {
+            Thread {
+                val outcome = try {
+                    val base = getPreferences(MODE_PRIVATE).getString("utility_api_base", "https://dnrsignal.duckdns.org").orEmpty()
+                    require(base.startsWith("https://"))
+                    val conn = (java.net.URL(base.trimEnd('/') + "/api/housing-feed?limit=100").openConnection() as java.net.HttpURLConnection).apply {
+                        connectTimeout = 8000; readTimeout = 8000
+                        setRequestProperty("Accept", "application/json")
+                    }
+                    try {
+                        require(conn.responseCode == 200) { "Сервер временно недоступен" }
+                        val array = org.json.JSONObject(conn.inputStream.bufferedReader().use { it.readText() }).getJSONArray("items")
+                        (0 until array.length()).map { array.getJSONObject(it) }
+                    } finally { conn.disconnect() }
+                } catch (e: Exception) { e }
+                runOnUiThread {
+                    if (currentPage != "housing") return@runOnUiThread
+                    if (outcome is Exception) status.text = outcome.message ?: "Не удалось получить сведения."
+                    else if (outcome is List<*>) {
+                        cached = outcome.filterIsInstance<org.json.JSONObject>()
+                        render(cached)
+                    }
+                }
+            }.start()
+        }
+        content.addView(button("Обновить сведения") { load() })
+        load()
+        val handler = android.os.Handler(android.os.Looper.getMainLooper())
+        val task = object : Runnable {
+            override fun run() {
+                if (currentPage != "housing") return
+                load()
+                handler.postDelayed(this, 60_000L)
+            }
+        }
+        handler.postDelayed(task, 60_000L)
+        content.addView(button("← На главную") { showHome() })
     }
 
     private fun showElectricity() {
