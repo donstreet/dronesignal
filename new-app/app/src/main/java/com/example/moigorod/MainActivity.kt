@@ -1099,6 +1099,60 @@ class MainActivity : Activity() {
                                         background = outlinedPanel()
                                         addView(text(item.optString("title"), 17f, Color.WHITE, true))
                                         addView(text(item.optString("summary"), 15f, muted))
+                                        val media = item.optJSONArray("media")
+                                        if (media != null) {
+                                            for (mediaIndex in 0 until minOf(media.length(), 8)) {
+                                                val attachment = media.optJSONObject(mediaIndex) ?: continue
+                                                val mediaType = attachment.optString("type")
+                                                val mediaUrl = attachment.optString("url")
+                                                val previewUrl = if (mediaType == "video") attachment.optString("thumbnail_url") else mediaUrl
+                                                fun safeMediaUri(raw: String): android.net.Uri? {
+                                                    val uri = android.net.Uri.parse(raw)
+                                                    return if (uri.scheme == "https" && !uri.host.isNullOrBlank() &&
+                                                        uri.userInfo == null && uri.port == -1) uri else null
+                                                }
+                                                val originalMedia = safeMediaUri(mediaUrl) ?: continue
+                                                val previewMedia = safeMediaUri(previewUrl)
+                                                if (previewMedia != null) {
+                                                    val photo = android.widget.ImageView(this@MainActivity).apply {
+                                                        adjustViewBounds = true
+                                                        scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
+                                                        contentDescription = if (mediaType == "video") "Обложка видео" else "Фото новости"
+                                                        setBackgroundColor(android.graphics.Color.DKGRAY)
+                                                    }
+                                                    addView(photo, LinearLayout.LayoutParams(-1, dp(180)).apply {
+                                                        topMargin = dp(8)
+                                                        bottomMargin = dp(4)
+                                                    })
+                                                    Thread {
+                                                        val bitmap = try {
+                                                            val connection = (java.net.URL(previewMedia.toString()).openConnection() as java.net.HttpURLConnection).apply {
+                                                                connectTimeout = 5000
+                                                                readTimeout = 5000
+                                                                instanceFollowRedirects = false
+                                                            }
+                                                            try {
+                                                                if (connection.responseCode != 200 ||
+                                                                    !connection.contentType.orEmpty().lowercase().startsWith("image/") ||
+                                                                    connection.contentLengthLong > 5_000_000L) null
+                                                                else connection.inputStream.use { stream ->
+                                                                    android.graphics.BitmapFactory.decodeStream(
+                                                                        java.io.BufferedInputStream(stream)
+                                                                    )
+                                                                }
+                                                            } finally { connection.disconnect() }
+                                                        } catch (_: Exception) { null }
+                                                        if (bitmap != null) runOnUiThread {
+                                                            if (currentPage == "news" && city == selectedCity) photo.setImageBitmap(bitmap)
+                                                        }
+                                                    }.start()
+                                                }
+                                                addView(button(if (mediaType == "video") "▶ Смотреть видео" else "Открыть фото") {
+                                                    startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, originalMedia))
+                                                })
+                                            }
+                                        }
+
                                         addView(text(item.optString("source_name", "Официальный источник") + " · " + item.optString("published_at"), 12f, muted))
                                         addView(button("Открыть оригинал") {
                                             val sourceUri = android.net.Uri.parse(item.optString("source_url"))
