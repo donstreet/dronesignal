@@ -1097,8 +1097,18 @@ class MainActivity : Activity() {
                                         orientation = LinearLayout.VERTICAL
                                         setPadding(dp(16), dp(12), dp(16), dp(12))
                                         background = outlinedPanel()
-                                        addView(text(item.optString("title"), 17f, Color.WHITE, true))
-                                        addView(text(item.optString("summary"), 15f, muted))
+                                        addView(text(item.optString("title"), 17f, Color.WHITE, true).apply {
+                                            maxLines = Int.MAX_VALUE
+                                            ellipsize = null
+                                            setHorizontallyScrolling(false)
+                                            layoutParams = LinearLayout.LayoutParams(-1, -2)
+                                        })
+                                        addView(text(item.optString("summary"), 15f, muted).apply {
+                                            maxLines = Int.MAX_VALUE
+                                            ellipsize = null
+                                            setHorizontallyScrolling(false)
+                                            layoutParams = LinearLayout.LayoutParams(-1, -2)
+                                        })
                                         val media = item.optJSONArray("media")
                                         if (media != null) {
                                             for (mediaIndex in 0 until minOf(media.length(), 8)) {
@@ -1120,7 +1130,7 @@ class MainActivity : Activity() {
                                                         contentDescription = if (mediaType == "video") "Обложка видео" else "Фото новости"
                                                         setBackgroundColor(android.graphics.Color.DKGRAY)
                                                     }
-                                                    addView(photo, LinearLayout.LayoutParams(-1, dp(180)).apply {
+                                                    addView(photo, LinearLayout.LayoutParams(-1, dp(150)).apply {
                                                         topMargin = dp(8)
                                                         bottomMargin = dp(4)
                                                     })
@@ -1147,9 +1157,47 @@ class MainActivity : Activity() {
                                                         }
                                                     }.start()
                                                 }
-                                                addView(button(if (mediaType == "video") "▶ Смотреть видео" else "Открыть фото") {
-                                                    startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, originalMedia))
-                                                })
+                                                if (mediaType == "video") {
+                                                    val directFile = originalMedia.path.orEmpty().lowercase().let { path ->
+                                                        path.endsWith(".mp4") || path.endsWith(".webm") || path.endsWith(".3gp") || path.endsWith(".m3u8")
+                                                    }
+                                                    if (directFile) {
+                                                        addView(button("▶ Смотреть здесь") {
+                                                            val dialog = android.app.Dialog(this@MainActivity)
+                                                            val video = android.widget.VideoView(this@MainActivity)
+                                                            val frame = LinearLayout(this@MainActivity).apply {
+                                                                orientation = LinearLayout.VERTICAL
+                                                                setBackgroundColor(Color.BLACK)
+                                                                addView(video, LinearLayout.LayoutParams(-1, dp(260)))
+                                                                addView(button("Закрыть") { dialog.dismiss() })
+                                                            }
+                                                            dialog.setContentView(frame)
+                                                            dialog.setOnDismissListener { video.stopPlayback() }
+                                                            video.setVideoURI(originalMedia)
+                                                            video.setMediaController(android.widget.MediaController(this@MainActivity).apply { setAnchorView(video) })
+                                                            video.setOnPreparedListener { video.start() }
+                                                            video.setOnErrorListener { _, _, _ ->
+                                                                android.widget.Toast.makeText(this@MainActivity, "Не удалось воспроизвести видео", android.widget.Toast.LENGTH_LONG).show()
+                                                                true
+                                                            }
+                                                            dialog.show()
+                                                            dialog.window?.setLayout(-1, -2)
+                                                        })
+                                                    } else {
+                                                        addView(text("Видео доступно в исходной публикации", 12f, muted))
+                                                    }
+                                                } else if (originalMedia.path.orEmpty().lowercase().endsWith(".gif")) {
+                                                    val gifView = android.webkit.WebView(this@MainActivity).apply {
+                                                        settings.javaScriptEnabled = false
+                                                        settings.allowFileAccess = false
+                                                        settings.allowContentAccess = false
+                                                        loadDataWithBaseURL(null,
+                                                            "<html><head><meta name='viewport' content='width=device-width,initial-scale=1'></head><body style='margin:0;background:#161616'><img style='width:100%;height:auto' src='" + android.text.TextUtils.htmlEncode(originalMedia.toString()) + "'></body></html>",
+                                                            "text/html", "UTF-8", null)
+                                                    }
+                                                    addView(gifView, LinearLayout.LayoutParams(-1, dp(180)))
+                                                }
+
                                             }
                                         }
 
