@@ -1057,20 +1057,31 @@ class MainActivity : Activity() {
                     setPadding(dp(16), dp(12), dp(16), dp(12))
                     background = outlinedPanel()
                     addView(text("${item.optString("city")} · $state", 15f, color, true))
-                    addView(text(item.optString("title"), 17f, Color.WHITE, true))
+                    addView(text(item.optString("title").replace(Regex("^Новость [—-] Администрация .+$"), "Сообщение администрации"), 17f, Color.WHITE, true))
                     addView(text(if (category == "housing_news") item.optString("summary") else item.optString("details"), 14f, muted))
-                    addView(text("Источник: ${item.optString("source_url")} · ${item.optString("published_at")}", 12f, muted))
+                    val timestamp = try {
+                        val instant = java.time.OffsetDateTime.parse(item.optString("published_at")).toInstant()
+                        java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy · HH:mm")
+                            .withZone(java.time.ZoneId.systemDefault()).format(instant)
+                    } catch (_: Exception) { "Время не указано" }
+                    addView(text(timestamp, 12f, muted))
+                    val sourceUrl = item.optString("source_url")
+                    if (sourceUrl.startsWith("https://")) {
+                        addView(button("Открыть первоисточник ↗") {
+                            startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(sourceUrl)))
+                        })
+                    }
                 }
                 entries.addView(panel, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(8) })
             }
         }
         var cached = emptyList<org.json.JSONObject>()
-        val filters = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        val filters = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }\n        val filterScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
         listOf("all" to "Все", "active" to "Отключения", "restored" to "Восстановлено",
             "planned" to "Плановые работы", "news" to "Новости ЖКХ").forEach { (key, label) ->
-            filters.addView(button(label) { filter = key; render(cached) })
+            filters.addView(button(label) { filter = key; render(cached) }, LinearLayout.LayoutParams(-2, dp(44)).apply { rightMargin = dp(6) })
         }
-        content.addView(filters)
+        filterScroll.addView(filters)\n        content.addView(filterScroll)
         fun load() {
             Thread {
                 val outcome = try {
