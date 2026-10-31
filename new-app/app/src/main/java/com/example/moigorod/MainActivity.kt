@@ -574,6 +574,43 @@ class MainActivity : Activity() {
         })
     }
 
+    private fun homeServiceShortcuts() {
+        content.addView(text("Городские сервисы", 17f, Color.WHITE, true),
+            LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(3) })
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val shortcuts = listOf(
+            Triple("✚", "Аптеки", "Аптеки"),
+            Triple("▣", "Транспорт", "Транспорт"),
+            Triple("⌖", "Адреса", "Полезные адреса"),
+            Triple("⋯", "Все сервисы", "catalog")
+        )
+        shortcuts.forEach { (symbol, label, destination) ->
+            val tile = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER
+                setPadding(dp(2), dp(3), dp(2), dp(3))
+                background = outlinedPanel()
+                addView(text(symbol, 18f, accent, true))
+                addView(text(label, 10f, Color.WHITE, true))
+                setOnClickListener {
+                    if (destination == "catalog") showServiceCatalog()
+                    else showPage(destination, "Проверенные адреса и контакты для города «$city» будут добавлены после сверки с достоверными источниками.")
+                }
+                isClickable = true
+            }
+            row.addView(tile, LinearLayout.LayoutParams(0, dp(49), 1f).apply {
+                marginStart = dp(2)
+                marginEnd = dp(2)
+            })
+        }
+        content.addView(row, LinearLayout.LayoutParams(-1, dp(49)).apply {
+            topMargin = dp(4)
+        })
+    }
+
     private fun showServiceCatalog() {
         currentPage = "services"
         shell("Городские службы")
@@ -733,7 +770,7 @@ class MainActivity : Activity() {
         content.addView(text("Городские разделы", 21f, Color.WHITE, true))
         featureStrip()
         chatPanel()
-        // Keep the home screen fixed and uncluttered; extra services live under “Ещё”.
+        homeServiceShortcuts()
         bottomNav()
     }
 
