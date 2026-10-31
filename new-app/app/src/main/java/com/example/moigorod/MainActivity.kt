@@ -1098,56 +1098,65 @@ class MainActivity : Activity() {
         card("Актуальность сведений", "Только подтверждённые публикации. Отсутствие сообщений не означает, что отключений нет.")
         val status = text("Загрузка сведений…", 14f, muted)
         content.addView(status)
-        val feed = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        content.addView(feed)
-        fun render(rows: List<org.json.JSONObject>) {
-            status.text = "Общая лента · Донецк и Макеевка · обновление каждые 60 секунд"
-            feed.removeAllViews()
-            val local = rows.filter {
-                it.optString("city") == "Донецк" || it.optString("city") == "Макеевка" ||
-                    it.optString("city") == "Все города"
-            }.sortedByDescending { it.optString("published_at") }
-            if (local.isEmpty()) {
-                feed.addView(text("Подтверждённых сообщений пока нет. Статус районов неизвестен.", 14f, muted))
+        val sections = listOf("Донецк", "Макеевка").associateWith { place ->
+            val panel = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(14), dp(12), dp(14), dp(12))
+                background = outlinedPanel()
+                addView(text(place, 21f, Color.WHITE, true))
             }
-            for (item in local) {
-                val state = when (item.optString("status")) {
-                    "active" -> "Отключение"
-                    "restored" -> "Восстановлено по сообщению источника"
-                    "planned" -> "Плановые работы"
-                    else -> "Сообщение"
+            val feed = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+            panel.addView(feed)
+            content.addView(panel, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
+            feed
+        }
+        fun render(rows: List<org.json.JSONObject>) {
+            status.text = "Подтверждённые публикации · обновление каждые 60 секунд"
+            for ((place, feed) in sections) {
+                feed.removeAllViews()
+                val local = rows.filter { it.optString("city") == place }
+                if (local.isEmpty()) {
+                    feed.addView(text("Подтверждённых сообщений пока нет. Статус районов неизвестен.", 14f, muted))
                 }
-                val stateColor = when (item.optString("status")) {
-                    "active" -> Color.rgb(239, 83, 80)
-                    "restored" -> Color.rgb(102, 187, 106)
-                    else -> Color.rgb(100, 181, 246)
+                for (item in local) {
+                    val state = when (item.optString("status")) {
+                        "active" -> "Отключение"
+                        "restored" -> "Восстановлено по сообщению источника"
+                        "planned" -> "Плановые работы"
+                        else -> "Сообщение"
+                    }
+                    val stateColor = when (item.optString("status")) {
+                        "active" -> Color.rgb(239, 83, 80)
+                        "restored" -> Color.rgb(102, 187, 106)
+                        else -> Color.rgb(100, 181, 246)
+                    }
+                    val addresses = item.optJSONArray("addresses")
+                    val location = if (addresses != null && addresses.length() > 0)
+                        (0 until addresses.length()).joinToString(", ") { addresses.optString(it) }
+                        else "Районы и адреса — в сообщении источника"
+                    val panel = LinearLayout(this).apply {
+                        orientation = LinearLayout.VERTICAL
+                        setPadding(dp(8), dp(12), dp(8), dp(12))
+                        addView(text(state, 16f, stateColor, true))
+                        addView(text(item.optString("title"), 15f, Color.WHITE, true))
+                        addView(text(location, 13f, muted))
+                        addView(text(item.optString("details"), 14f, muted))
+                        val time = try {
+                            java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy · HH:mm")
+                                .withZone(java.time.ZoneId.systemDefault())
+                                .format(java.time.OffsetDateTime.parse(item.optString("published_at")).toInstant())
+                        } catch (_: Exception) { "Время не указано" }
+                        addView(text(time, 12f, muted))
+                        val source = item.optString("source")
+                        if (source.startsWith("https://")) addView(button("Первоисточник ↗") {
+                            startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(source)))
+                        })
+                    }
+                    feed.addView(panel)
+                    feed.addView(android.view.View(this).apply {
+                        setBackgroundColor(Color.rgb(62, 62, 66))
+                    }, LinearLayout.LayoutParams(-1, dp(1)))
                 }
-                val addresses = item.optJSONArray("addresses")
-                val location = if (addresses != null && addresses.length() > 0)
-                    (0 until addresses.length()).joinToString(", ") { addresses.optString(it) }
-                    else "Районы и адреса — в сообщении источника"
-                val panel = LinearLayout(this).apply {
-                    orientation = LinearLayout.VERTICAL
-                    setPadding(dp(8), dp(12), dp(8), dp(12))
-                    addView(text(state + " · " + item.optString("city", "Все города"), 16f, stateColor, true))
-                    addView(text(item.optString("title"), 15f, Color.WHITE, true))
-                    addView(text(location, 13f, muted))
-                    addView(text(item.optString("details"), 14f, muted))
-                    val time = try {
-                        java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy · HH:mm")
-                            .withZone(java.time.ZoneId.systemDefault())
-                            .format(java.time.OffsetDateTime.parse(item.optString("published_at")).toInstant())
-                    } catch (_: Exception) { "Время не указано" }
-                    addView(text(time, 12f, muted))
-                    val source = item.optString("source")
-                    if (source.startsWith("https://")) addView(button("Первоисточник ↗") {
-                        startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(source)))
-                    })
-                }
-                feed.addView(panel)
-                feed.addView(android.view.View(this).apply {
-                    setBackgroundColor(Color.rgb(62, 62, 66))
-                }, LinearLayout.LayoutParams(-1, dp(1)))
             }
         }
         fun load() {
@@ -1194,56 +1203,65 @@ class MainActivity : Activity() {
         card("Актуальность сведений", "Только подтверждённые публикации. Отсутствие сообщений не означает, что отключений нет.")
         val status = text("Загрузка сведений…", 14f, muted)
         content.addView(status)
-        val feed = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        content.addView(feed)
-        fun render(rows: List<org.json.JSONObject>) {
-            status.text = "Общая лента · Донецк и Макеевка · обновление каждые 60 секунд"
-            feed.removeAllViews()
-            val local = rows.filter {
-                it.optString("city") == "Донецк" || it.optString("city") == "Макеевка" ||
-                    it.optString("city") == "Все города"
-            }.sortedByDescending { it.optString("published_at") }
-            if (local.isEmpty()) {
-                feed.addView(text("Подтверждённых сообщений пока нет. Статус районов неизвестен.", 14f, muted))
+        val sections = listOf("Донецк", "Макеевка").associateWith { place ->
+            val panel = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(14), dp(12), dp(14), dp(12))
+                background = outlinedPanel()
+                addView(text(place, 21f, Color.WHITE, true))
             }
-            for (item in local) {
-                val state = when (item.optString("status")) {
-                    "active" -> "Отключение"
-                    "restored" -> "Восстановлено по сообщению источника"
-                    "planned" -> "Плановые работы"
-                    else -> "Сообщение"
+            val feed = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+            panel.addView(feed)
+            content.addView(panel, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
+            feed
+        }
+        fun render(rows: List<org.json.JSONObject>) {
+            status.text = "Подтверждённые публикации · обновление каждые 60 секунд"
+            for ((place, feed) in sections) {
+                feed.removeAllViews()
+                val local = rows.filter { it.optString("city") == place }
+                if (local.isEmpty()) {
+                    feed.addView(text("Подтверждённых сообщений пока нет. Статус районов неизвестен.", 14f, muted))
                 }
-                val stateColor = when (item.optString("status")) {
-                    "active" -> Color.rgb(239, 83, 80)
-                    "restored" -> Color.rgb(102, 187, 106)
-                    else -> Color.rgb(100, 181, 246)
+                for (item in local) {
+                    val state = when (item.optString("status")) {
+                        "active" -> "Отключение"
+                        "restored" -> "Восстановлено по сообщению источника"
+                        "planned" -> "Плановые работы"
+                        else -> "Сообщение"
+                    }
+                    val stateColor = when (item.optString("status")) {
+                        "active" -> Color.rgb(239, 83, 80)
+                        "restored" -> Color.rgb(102, 187, 106)
+                        else -> Color.rgb(100, 181, 246)
+                    }
+                    val addresses = item.optJSONArray("addresses")
+                    val location = if (addresses != null && addresses.length() > 0)
+                        (0 until addresses.length()).joinToString(", ") { addresses.optString(it) }
+                        else "Районы и адреса — в сообщении источника"
+                    val panel = LinearLayout(this).apply {
+                        orientation = LinearLayout.VERTICAL
+                        setPadding(dp(8), dp(12), dp(8), dp(12))
+                        addView(text(state, 16f, stateColor, true))
+                        addView(text(item.optString("title"), 15f, Color.WHITE, true))
+                        addView(text(location, 13f, muted))
+                        addView(text(item.optString("details"), 14f, muted))
+                        val time = try {
+                            java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy · HH:mm")
+                                .withZone(java.time.ZoneId.systemDefault())
+                                .format(java.time.OffsetDateTime.parse(item.optString("published_at")).toInstant())
+                        } catch (_: Exception) { "Время не указано" }
+                        addView(text(time, 12f, muted))
+                        val source = item.optString("source")
+                        if (source.startsWith("https://")) addView(button("Первоисточник ↗") {
+                            startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(source)))
+                        })
+                    }
+                    feed.addView(panel)
+                    feed.addView(android.view.View(this).apply {
+                        setBackgroundColor(Color.rgb(62, 62, 66))
+                    }, LinearLayout.LayoutParams(-1, dp(1)))
                 }
-                val addresses = item.optJSONArray("addresses")
-                val location = if (addresses != null && addresses.length() > 0)
-                    (0 until addresses.length()).joinToString(", ") { addresses.optString(it) }
-                    else "Районы и адреса — в сообщении источника"
-                val panel = LinearLayout(this).apply {
-                    orientation = LinearLayout.VERTICAL
-                    setPadding(dp(8), dp(12), dp(8), dp(12))
-                    addView(text(state + " · " + item.optString("city", "Все города"), 16f, stateColor, true))
-                    addView(text(item.optString("title"), 15f, Color.WHITE, true))
-                    addView(text(location, 13f, muted))
-                    addView(text(item.optString("details"), 14f, muted))
-                    val time = try {
-                        java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy · HH:mm")
-                            .withZone(java.time.ZoneId.systemDefault())
-                            .format(java.time.OffsetDateTime.parse(item.optString("published_at")).toInstant())
-                    } catch (_: Exception) { "Время не указано" }
-                    addView(text(time, 12f, muted))
-                    val source = item.optString("source")
-                    if (source.startsWith("https://")) addView(button("Первоисточник ↗") {
-                        startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(source)))
-                    })
-                }
-                feed.addView(panel)
-                feed.addView(android.view.View(this).apply {
-                    setBackgroundColor(Color.rgb(62, 62, 66))
-                }, LinearLayout.LayoutParams(-1, dp(1)))
             }
         }
         fun load() {
