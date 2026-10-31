@@ -1099,6 +1099,17 @@ class MainActivity : Activity() {
             }
             content.addView(button("Обновить сведения") { load() })
             load()
+            val refreshPage = currentPage
+            val refreshCity = city
+            val refreshHandler = android.os.Handler(android.os.Looper.getMainLooper())
+            val refreshTask = object : Runnable {
+                override fun run() {
+                    if (currentPage != refreshPage || city != refreshCity) return
+                    load()
+                    refreshHandler.postDelayed(this, 60_000L)
+                }
+            }
+            refreshHandler.postDelayed(refreshTask, 60_000L)
         }
         content.addView(button("← На главную") { showHome() })
     }
@@ -1184,6 +1195,17 @@ class MainActivity : Activity() {
             }
             content.addView(button("Обновить сведения") { load() })
             load()
+            val refreshPage = currentPage
+            val refreshCity = city
+            val refreshHandler = android.os.Handler(android.os.Looper.getMainLooper())
+            val refreshTask = object : Runnable {
+                override fun run() {
+                    if (currentPage != refreshPage || city != refreshCity) return
+                    load()
+                    refreshHandler.postDelayed(this, 60_000L)
+                }
+            }
+            refreshHandler.postDelayed(refreshTask, 60_000L)
         }
         content.addView(button("← На главную") { showHome() })
     }
