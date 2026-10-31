@@ -1027,7 +1027,6 @@ class MainActivity : Activity() {
         val status = text("Загрузка…", 15f, muted)
         content.addView(status)
         val entries = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        content.addView(entries)
         var filter = "all"
         fun render(rows: List<org.json.JSONObject>) {
             entries.removeAllViews()
@@ -1039,7 +1038,7 @@ class MainActivity : Activity() {
                 else -> true
             } }
             status.text = if (filtered.isEmpty()) "Подтверждённых сообщений в выбранной категории пока нет." else "Подтверждённых публикаций: ${filtered.size}"
-            filtered.forEach { item ->
+            filtered.sortedByDescending { it.optString("published_at") }.forEach { item ->
                 val category = item.optString("category")
                 val state = when (item.optString("status")) {
                     "active" -> "Отключение"
@@ -1052,11 +1051,12 @@ class MainActivity : Activity() {
                     "restored" -> Color.rgb(102, 187, 106)
                     else -> muted
                 }
+                val service = when (item.optString("kind")) { "water" -> "Вода · "; "electricity" -> "Свет · "; else -> "" }
                 val panel = LinearLayout(this).apply {
                     orientation = LinearLayout.VERTICAL
                     setPadding(dp(16), dp(12), dp(16), dp(12))
                     background = outlinedPanel()
-                    addView(text("${item.optString("city")} · $state", 15f, color, true))
+                    addView(text("${item.optString("city")} · $service$state", 15f, color, true))
                     addView(text(item.optString("title").replace(Regex("^Новость [—-] Администрация .+$"), "Сообщение администрации"), 17f, Color.WHITE, true))
                     addView(text(if (category == "housing_news") item.optString("summary") else item.optString("details"), 14f, muted))
                     val timestamp = try {
@@ -1084,6 +1084,7 @@ class MainActivity : Activity() {
         }
         filterScroll.addView(filters)
         content.addView(filterScroll)
+        content.addView(entries)
         fun load() {
             Thread {
                 val outcome = try {
