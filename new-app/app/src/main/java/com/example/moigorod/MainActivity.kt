@@ -800,7 +800,136 @@ class MainActivity : Activity() {
             getPreferences(MODE_PRIVATE).edit().remove("utility_api_base").apply()
             showSettings()
         })
+        content.addView(button("Личный кабинет") { showAccount() })
         content.addView(button("← На главную") { showHome() })
+    }
+
+
+    private fun accountField(hintText: String, type: Int): EditText = EditText(this).apply {
+        hint = hintText
+        inputType = type
+        setTextColor(Color.WHITE)
+        setHintTextColor(muted)
+        isSingleLine = true
+        setPadding(dp(12), dp(8), dp(12), dp(8))
+        background = outlinedPanel()
+    }
+
+    private fun accountRequest(path: String, payload: org.json.JSONObject?, token: String? = null,
+                               done: (Int, org.json.JSONObject) -> Unit) {
+        Thread {
+            var status = 0
+            var result = org.json.JSONObject()
+            try {
+                val base = "https://dnrsignal.duckdns.org"
+                val connection = (java.net.URL(base + path).openConnection() as java.net.HttpURLConnection).apply {
+                    requestMethod = if (payload == null) "GET" else "POST"
+                    connectTimeout = 10000
+                    readTimeout = 10000
+                    setRequestProperty("Accept", "application/json")
+                    if (token != null) setRequestProperty("Authorization", "Bearer " + token)
+                    if (payload != null) {
+                        doOutput = true
+                        setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                    }
+                }
+                try {
+                    if (payload != null) connection.outputStream.use { it.write(payload.toString().toByteArray(Charsets.UTF_8)) }
+                    status = connection.responseCode
+                    val stream = if (status in 200..299) connection.inputStream else connection.errorStream
+                    val body = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
+                    if (body.startsWith("{")) result = org.json.JSONObject(body)
+                } finally { connection.disconnect() }
+            } catch (_: Exception) {
+                result.put("detail", "Не удалось подключиться к серверу")
+            }
+            val code = status
+            val response = result
+            runOnUiThread { done(code, response) }
+        }.start()
+    }
+
+    private fun showAccount() {
+        currentPage = "account"
+        shell("Личный кабинет")
+        val prefs = getPreferences(MODE_PRIVATE)
+        val token = prefs.getString("account_token", null)
+        if (token != null) {
+            val info = text("Загрузка профиля…", 16f, muted)
+            content.addView(info)
+            accountRequest("/api/account/me", null, token) { code, json ->
+                if (currentPage != "account") return@accountRequest
+                if (code == 200) {
+                    info.text = "Имя: " + json.optString("display_name") + "\\nЛогин: " +
+                        json.optString("username") + "\\nГород: " + json.optString("city") +
+                        "\\nТелефон скрыт от других пользователей"
+                } else {
+                    info.text = "Сессия недоступна. Войдите повторно."
+                    if (code == 401) prefs.edit().remove("account_token").apply()
+                }
+            }
+            content.addView(button("Выйти из аккаунта") {
+                accountRequest("/api/account/logout", org.json.JSONObject(), token) { _, _ -> }
+                prefs.edit().remove("account_token").apply()
+                showAccount()
+            })
+        } else {
+            content.addView(text("Вход по логину и паролю", 17f, Color.WHITE, true))
+            val login = accountField("Логин", android.text.InputType.TYPE_CLASS_TEXT)
+            val password = accountField("Пароль", android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD)
+            content.addView(login); content.addView(password)
+            val feedback = text("", 14f, muted)
+            content.addView(button("Войти") {
+                val payload = org.json.JSONObject().put("username", login.text.toString().trim())
+                    .put("password", password.text.toString())
+                feedback.text = "Проверяем…"
+                accountRequest("/api/account/login", payload) { code, json ->
+                    if (code == 200) {
+                        prefs.edit().putString("account_token", json.optString("access_token")).apply()
+                        showAccount()
+                    } else feedback.text = if (code == 401) "Неверный логин или пароль" else "Ошибка входа (код " + code + ")"
+                }
+            })
+            content.addView(feedback)
+            content.addView(button("Создать аккаунт") { showRegistration() })
+        }
+        content.addView(button("← На главную") { showHome() })
+    }
+
+    private fun showRegistration() {
+        currentPage = "registration"
+        shell("Регистрация")
+        content.addView(text("Почта и SMS не требуются. Номер телефона не подтверждён.", 14f, muted))
+        val login = accountField("Логин (латиница, цифры, _)", android.text.InputType.TYPE_CLASS_TEXT)
+        val pass = accountField("Пароль — от 6 символов", android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD)
+        val phone = accountField("Телефон: +79991234567", android.text.InputType.TYPE_CLASS_PHONE)
+        val name = accountField("Ваше имя", android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES)
+        content.addView(login); content.addView(pass); content.addView(phone); content.addView(name)
+        content.addView(text("Город: " + city, 15f, muted))
+        val feedback = text("", 14f, muted)
+        content.addView(button("Зарегистрироваться") {
+            if (pass.text.length < 6 || city == "Выберите город" || name.text.isBlank()) {
+                feedback.text = "Укажите имя, город и пароль не короче 6 символов"
+            } else {
+                val payload = org.json.JSONObject().put("username", login.text.toString().trim())
+                    .put("password", pass.text.toString()).put("phone", phone.text.toString().trim())
+                    .put("display_name", name.text.toString().trim()).put("city", city)
+                feedback.text = "Создаём аккаунт…"
+                accountRequest("/api/account/register", payload) { code, json ->
+                    if (code == 201) {
+                        android.widget.Toast.makeText(this, "Аккаунт создан. Теперь войдите.", android.widget.Toast.LENGTH_LONG).show()
+                        showAccount()
+                    } else feedback.text = when (code) {
+                        409 -> "Логин или телефон уже используется"
+                        422 -> "Проверьте логин и телефон в международном формате"
+                        429 -> "Слишком много попыток. Попробуйте позже"
+                        else -> "Ошибка регистрации (код " + code + ")"
+                    }
+                }
+            }
+        })
+        content.addView(feedback)
+        content.addView(button("← К входу") { showAccount() })
     }
 
     private fun showElectricity() {
