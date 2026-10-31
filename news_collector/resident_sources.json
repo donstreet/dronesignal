@@ -1,0 +1,33 @@
+
+{
+  "source": "militarydonetsk_pereklichka",
+  "source_type": "resident_reports",
+  "verification": "unverified",
+  "enabled": false,
+  "topics": [
+    {
+      "post_id": 245774,
+      "category": "electricity"
+    },
+    {
+      "post_id": 245782,
+      "category": "water"
+    },
+    {
+      "post_id": 1,
+      "category": "danger"
+    },
+    {
+      "post_id": 456142,
+      "category": "transport"
+    },
+    {
+      "post_id": 456150,
+      "category": "housing"
+    },
+    {
+      "post_id": 245775,
+      "category": "housing"
+    }
+  ]
+}
