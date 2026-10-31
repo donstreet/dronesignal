@@ -1225,11 +1225,11 @@ class MainActivity : Activity() {
             card("Сначала выберите город", "Лента новостей привязана к выбранному населённому пункту.")
             content.addView(button("Выбрать город") { chooseCity() })
         } else {
-            card("Проверенные публикации", "Показываем только сообщения, прошедшие проверку. Пустая лента не означает, что в городе ничего не происходит.")
             val status = text("Загрузка новостей…", 15f, muted)
             content.addView(status)
             val entries = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
             content.addView(entries)
+            var scrollAfterLoad = false
             fun load() {
                 status.text = "Загрузка новостей…"
                 entries.removeAllViews()
@@ -1377,11 +1377,24 @@ class MainActivity : Activity() {
                                 }
                             }
                         }
+                        if (scrollAfterLoad) {
+                            scrollAfterLoad = false
+                            (root.getChildAt(0) as? ScrollView)?.post {
+                                (root.getChildAt(0) as? ScrollView)?.fullScroll(View.FOCUS_DOWN)
+                            }
+                        }
                     }
                 }.start()
             }
             load()
-            content.addView(button("Обновить ленту") { load() })
+            root.addView(button("↻ Обновить ленту ↓") {
+                scrollAfterLoad = true
+                load()
+            }, LinearLayout.LayoutParams(-1, dp(52)).apply {
+                leftMargin = dp(20)
+                rightMargin = dp(20)
+                bottomMargin = dp(8)
+            })
         }
         content.addView(button("← На главную") { showHome() })
     }
