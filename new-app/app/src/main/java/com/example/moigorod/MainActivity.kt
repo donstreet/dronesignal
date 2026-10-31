@@ -1030,7 +1030,7 @@ class MainActivity : Activity() {
                 val selectedCity = city
                 Thread {
                     val outcome = try {
-                        val base = getPreferences(MODE_PRIVATE).getString("utility_api_base", "").orEmpty()
+                        val base = getPreferences(MODE_PRIVATE).getString("utility_api_base", "https://dnrsignal.duckdns.org").orEmpty()
                         require(base.startsWith("https://")) { "Источник новостей пока не подключён." }
                         val url = java.net.URL(base.trimEnd('/') + "/api/news?city=" +
                             java.net.URLEncoder.encode(selectedCity, "UTF-8") + "&limit=20")
@@ -1051,9 +1051,9 @@ class MainActivity : Activity() {
                                 val sourceHost = parsedSource.host?.lowercase()
                                 val trustedSource = parsedSource.scheme == "https" &&
                                     parsedSource.userInfo == null &&
-                                    (sourceHost == "t.me" || sourceHost == "max.ru") &&
+                                    (sourceHost == "t.me" || sourceHost == "max.ru" || sourceHost == "vesti.ru" || sourceHost?.endsWith(".vesti.ru") == true) &&
                                     parsedSource.path.orEmpty().length > 1
-                                if (item.optString("city") == selectedCity &&
+                                if ((item.optString("city") == selectedCity || item.optString("city") == "Все города") &&
                                     item.optString("verification") == "confirmed" &&
                                     trustedSource &&
                                     item.optString("title").isNotBlank() &&
@@ -1076,12 +1076,12 @@ class MainActivity : Activity() {
                                         background = outlinedPanel()
                                         addView(text(item.optString("title"), 17f, Color.WHITE, true))
                                         addView(text(item.optString("summary"), 15f, muted))
-                                        addView(text(friendlyNewsSource(item.optString("source")) + " · " + item.optString("published_at"), 12f, muted))
+                                        addView(text(item.optString("source_name", "Официальный источник") + " · " + item.optString("published_at"), 12f, muted))
                                         addView(button("Открыть оригинал") {
                                             val sourceUri = android.net.Uri.parse(item.optString("source_url"))
                                             if (sourceUri.scheme == "https" &&
                                                 sourceUri.userInfo == null &&
-                                                (sourceUri.host?.lowercase() == "t.me" || sourceUri.host?.lowercase() == "max.ru") &&
+                                                (sourceUri.host?.lowercase() == "t.me" || sourceUri.host?.lowercase() == "max.ru" || sourceUri.host?.lowercase() == "vesti.ru" || sourceUri.host?.lowercase()?.endsWith(".vesti.ru") == true) &&
                                                 sourceUri.path.orEmpty().length > 1) {
                                                 startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, sourceUri))
                                             } else {
