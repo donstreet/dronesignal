@@ -574,43 +574,6 @@ class MainActivity : Activity() {
         })
     }
 
-    private fun homeServiceShortcuts() {
-        content.addView(text("Городские сервисы", 17f, Color.WHITE, true),
-            LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(3) })
-        val row = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-        }
-        val shortcuts = listOf(
-            Triple("✚", "Аптеки", "Аптеки"),
-            Triple("▣", "Транспорт", "Транспорт"),
-            Triple("⌖", "Адреса", "Полезные адреса"),
-            Triple("⋯", "Все сервисы", "catalog")
-        )
-        shortcuts.forEach { (symbol, label, destination) ->
-            val tile = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                gravity = Gravity.CENTER
-                setPadding(dp(2), dp(3), dp(2), dp(3))
-                background = outlinedPanel()
-                addView(text(symbol, 18f, accent, true))
-                addView(text(label, 10f, Color.WHITE, true))
-                setOnClickListener {
-                    if (destination == "catalog") showServiceCatalog()
-                    else showPage(destination, "Проверенные адреса и контакты для города «$city» будут добавлены после сверки с достоверными источниками.")
-                }
-                isClickable = true
-            }
-            row.addView(tile, LinearLayout.LayoutParams(0, dp(49), 1f).apply {
-                marginStart = dp(2)
-                marginEnd = dp(2)
-            })
-        }
-        content.addView(row, LinearLayout.LayoutParams(-1, dp(49)).apply {
-            topMargin = dp(4)
-        })
-    }
-
     private fun showServiceCatalog() {
         currentPage = "services"
         shell("Городские службы")
@@ -736,7 +699,7 @@ class MainActivity : Activity() {
 
     private fun showHome() {
         currentPage = "home"
-        shell("", allowScroll = false)
+        shell("")
         content.removeAllViews()
         header()
         promoBanner()
@@ -770,7 +733,30 @@ class MainActivity : Activity() {
         content.addView(text("Городские разделы", 21f, Color.WHITE, true))
         featureStrip()
         chatPanel()
-        homeServiceShortcuts()
+        content.addView(text("Полезное рядом  →", 21f, Color.WHITE, true).apply {
+            setPadding(0, dp(12), 0, dp(2))
+        })
+        val nearbyScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
+        val nearbyRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        listOf(
+            Triple("🚌", "Транспорт", "Маршруты и расписания"),
+            Triple("🔧", "Новости ЖКХ", "Ремонт и городские работы"),
+            Triple("⚕", "Аптеки", "Справочник аптек"),
+            Triple("🚕", "Такси", "Контакты такси"),
+            Triple("⌖", "Полезные адреса", "Городские службы"),
+            Triple("chat", "Каналы", "Администрации")
+        ).forEach { item ->
+            nearbyRow.addView(iconTile(item.first, item.second, "") {
+                when (item.second) {
+                    "Каналы" -> showOfficialChannels()
+                    "Транспорт" -> showPage("Транспорт", "Расписания автобусов, изменения маршрутов и транспортные сообщения для города: $city. Актуальные данные появятся после подключения проверенных источников.")
+                    "Новости ЖКХ" -> showPage("Новости ЖКХ", "Аварии на сетях, ремонт дорог, уборка улиц, вывоз мусора и благоустройство в городе: $city. Графики отключения света и воды остаются в отдельных разделах.")
+                    else -> showPage(item.second, "Сведения появятся после подключения справочника.")
+                }
+            }, LinearLayout.LayoutParams(dp(100), dp(84)).apply { rightMargin = dp(5) })
+        }
+        nearbyScroll.addView(nearbyRow)
+        content.addView(nearbyScroll)
         bottomNav()
     }
 
