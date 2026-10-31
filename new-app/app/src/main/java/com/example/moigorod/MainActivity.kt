@@ -140,6 +140,8 @@ class MainActivity : Activity() {
                 "💧" -> Color.rgb(23, 111, 165)
                 "⛽" -> Color.rgb(41, 125, 48)
                 "▤" -> Color.rgb(112, 58, 165)
+                "🚌" -> Color.rgb(34, 116, 181)
+                "🔧" -> Color.rgb(128, 92, 75)
                 "⚕" -> Color.rgb(20, 157, 105)
                 "🚕" -> Color.rgb(205, 139, 20)
                 "⌖" -> Color.rgb(26, 116, 211)
@@ -234,7 +236,7 @@ class MainActivity : Activity() {
         }
     }.apply { contentDescription = when(key) {
         "⚡" -> "Свет"; "💧" -> "Вода"; "⛽" -> "Топливо"; "▤" -> "Новости"
-        "⚕" -> "Аптеки"; "🚕" -> "Такси"; "⌖" -> "Полезные адреса"; "city" -> "Мой город"; "chat" -> "Онлайн-чат"
+        "🚌" -> "Транспорт"; "🔧" -> "Коммунальные новости"; "⚕" -> "Аптеки"; "🚕" -> "Такси"; "⌖" -> "Полезные адреса"; "city" -> "Мой город"; "chat" -> "Онлайн-чат"
         "pin" -> "Выбор города"
         else -> key
     } }
@@ -735,14 +737,20 @@ class MainActivity : Activity() {
         val nearbyScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
         val nearbyRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         listOf(
+            Triple("🚌", "Транспорт", "Маршруты и расписания"),
+            Triple("🔧", "Коммунальные новости", "Ремонт и городские работы"),
             Triple("⚕", "Аптеки", "Справочник аптек"),
             Triple("🚕", "Такси", "Контакты такси"),
             Triple("⌖", "Полезные адреса", "Городские службы"),
             Triple("chat", "Каналы", "Администрации")
         ).forEach { item ->
             nearbyRow.addView(iconTile(item.first, item.second, "") {
-                if (item.second == "Каналы") showOfficialChannels()
-                else showPage(item.second, "Сведения появятся после подключения справочника.")
+                when (item.second) {
+                    "Каналы" -> showOfficialChannels()
+                    "Транспорт" -> showPage("Транспорт", "Расписания автобусов, изменения маршрутов и транспортные сообщения для города: $city. Актуальные данные появятся после подключения проверенных источников.")
+                    "Коммунальные новости" -> showPage("Коммунальные новости", "Аварии на сетях, ремонт дорог, уборка улиц, вывоз мусора и благоустройство в городе: $city. Графики отключения света и воды остаются в отдельных разделах.")
+                    else -> showPage(item.second, "Сведения появятся после подключения справочника.")
+                }
             }, LinearLayout.LayoutParams(dp(100), dp(84)).apply { rightMargin = dp(5) })
         }
         nearbyScroll.addView(nearbyRow)
