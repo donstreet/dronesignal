@@ -835,7 +835,7 @@ class MainActivity : Activity() {
                     card("Мой профиль", "Логин: " + json.optString("username") +
                         "\nИмя: " + json.optString("display_name") +
                         "\nГород: " + json.optString("city") +
-                        "\nТелефон: скрыт от других пользователей")
+                        "\nТелефон: скрыт от других пользователей") { showEditProfile() }
                 } else {
                     info.text = "Не удалось загрузить профиль (код " + code + ")."
                     if (code == 401) {
@@ -878,6 +878,45 @@ class MainActivity : Activity() {
             content.addView(button("Создать аккаунт") { showRegistration() })
         }
         content.addView(button("← На главную") { showHome() })
+    }
+
+    private fun showEditProfile() {
+        currentPage = "edit_profile"
+        shell("Редактировать профиль")
+        val token = getPreferences(MODE_PRIVATE).getString("account_token", null)
+        if (token == null) { showAccount(); return }
+        val name = accountField("Имя", android.text.InputType.TYPE_CLASS_TEXT)
+        val selected = text("Город: " + city, 16f, muted)
+        val feedback = text("Загружаем профиль…", 14f, muted)
+        content.addView(name)
+        content.addView(selected)
+        content.addView(button("Выбрать город") { chooseCity { selected.text = "Город: " + city } })
+        content.addView(feedback)
+        accountRequest("/api/account/me", null, token) { code, json ->
+            if (currentPage != "edit_profile") return@accountRequest
+            if (code == 200) {
+                name.setText(json.optString("display_name"))
+                city = json.optString("city", city)
+                selected.text = "Город: " + city
+                feedback.text = "Логин и телефон не изменяются."
+            } else feedback.text = "Не удалось загрузить профиль"
+        }
+        content.addView(button("Сохранить изменения") {
+            val value = name.text.toString().trim()
+            if (value.isEmpty() || city == "Выберите город") {
+                feedback.text = "Укажите имя и город"
+            } else {
+                feedback.text = "Сохраняем…"
+                val payload = org.json.JSONObject().put("display_name", value).put("city", city)
+                accountRequest("/api/account/update-profile", payload, token) { code, _ ->
+                    if (code == 200) {
+                        getPreferences(MODE_PRIVATE).edit().putString("city", city).apply()
+                        showAccount()
+                    } else feedback.text = "Не удалось сохранить (код " + code + ")"
+                }
+            }
+        })
+        content.addView(button("← В личный кабинет") { showAccount() })
     }
 
     private fun showAccountNotice(title: String, message: String) {
