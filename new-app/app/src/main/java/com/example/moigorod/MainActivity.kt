@@ -1123,7 +1123,7 @@ class MainActivity : Activity() {
                                                 }
                                                 val originalMedia = safeMediaUri(mediaUrl) ?: continue
                                                 val previewMedia = safeMediaUri(previewUrl)
-                                                if (previewMedia != null) {
+                                                if (previewMedia != null && !(mediaType == "image" && originalMedia.path.orEmpty().lowercase().endsWith(".gif"))) {
                                                     val photo = android.widget.ImageView(this@MainActivity).apply {
                                                         adjustViewBounds = true
                                                         scaleType = android.widget.ImageView.ScaleType.CENTER_CROP
