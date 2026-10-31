@@ -831,13 +831,26 @@ class MainActivity : Activity() {
             accountRequest("/api/account/me", null, token) { code, json ->
                 if (currentPage != "account") return@accountRequest
                 if (code == 200) {
-                    info.text = "Имя: " + json.optString("display_name") + "\\nЛогин: " +
-                        json.optString("username") + "\\nГород: " + json.optString("city") +
-                        "\\nТелефон скрыт от других пользователей"
+                    info.text = "Здравствуйте, " + json.optString("display_name") + "!"
+                    card("Мой профиль", "Логин: " + json.optString("username") +
+                        "\nИмя: " + json.optString("display_name") +
+                        "\nГород: " + json.optString("city") +
+                        "\nТелефон: скрыт от других пользователей")
                 } else {
-                    info.text = "Сессия недоступна. Войдите повторно."
-                    if (code == 401) prefs.edit().remove("account_token").apply()
+                    info.text = "Не удалось загрузить профиль (код " + code + ")."
+                    if (code == 401) {
+                        prefs.edit().remove("account_token").apply()
+                        showAccount()
+                    }
                 }
+            }
+            card("Мои сообщения", "Личные переписки — подключим после запуска защищённого сервера сообщений.") {
+                showAccountNotice("Мои сообщения", "Переписки пока не подключены. Сообщения не отправляются.")
+            }
+            card("Городской чат", "Общение с жителями выбранного города.") { showCommunityChat() }
+            card("Уведомления", "Настройте оповещения на этом устройстве.") { showAccountPreferences() }
+            card("Приватность", "Ваш телефон не показывается другим пользователям.") {
+                showAccountNotice("Приватность", "Телефон используется только для регистрации и пока не подтверждён SMS. Другим пользователям он не показывается.")
             }
             content.addView(button("Выйти из аккаунта") {
                 accountRequest("/api/account/logout", org.json.JSONObject(), token) { _, _ -> }
@@ -865,6 +878,35 @@ class MainActivity : Activity() {
             content.addView(button("Создать аккаунт") { showRegistration() })
         }
         content.addView(button("← На главную") { showHome() })
+    }
+
+    private fun showAccountNotice(title: String, message: String) {
+        currentPage = "account_notice"
+        shell(title)
+        content.addView(text(message, 16f, muted))
+        content.addView(button("← В личный кабинет") { showAccount() })
+    }
+
+    private fun showAccountPreferences() {
+        currentPage = "account_preferences"
+        shell("Уведомления")
+        content.addView(text("Эти предпочтения сохраняются на устройстве. Подключение push-уведомлений — следующий этап.", 14f, muted))
+        val prefs = getPreferences(MODE_PRIVATE)
+        for ((key, label) in listOf(
+            "notify_danger" to "Опасности",
+            "notify_light" to "Свет",
+            "notify_water" to "Вода",
+            "notify_news" to "Новости"
+        )) {
+            val check = CheckBox(this).apply {
+                text = label
+                setTextColor(Color.WHITE)
+                isChecked = prefs.getBoolean(key, true)
+                setOnCheckedChangeListener { _, checked -> prefs.edit().putBoolean(key, checked).apply() }
+            }
+            content.addView(check)
+        }
+        content.addView(button("← В личный кабинет") { showAccount() })
     }
 
     private fun showRegistration() {
