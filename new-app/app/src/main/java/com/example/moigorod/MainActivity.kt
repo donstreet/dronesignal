@@ -1157,75 +1157,9 @@ class MainActivity : Activity() {
                                                         }
                                                     }.start()
                                                 }
+                                                // News media are display-only. The source button below is the sole navigation action.
                                                 if (mediaType == "video") {
-                                                    val directFile = originalMedia.path.orEmpty().lowercase().let { path ->
-                                                        path.endsWith(".mp4") || path.endsWith(".webm") || path.endsWith(".3gp") || path.endsWith(".m3u8")
-                                                    }
-                                                    val mediaHost = originalMedia.host.orEmpty().lowercase()
-                                                    val youtubeId = when {
-                                                        mediaHost in listOf("youtube.com", "www.youtube.com", "m.youtube.com") && originalMedia.path == "/watch" ->
-                                                            originalMedia.getQueryParameter("v")
-                                                        mediaHost in listOf("youtube.com", "www.youtube.com", "m.youtube.com") && originalMedia.path.orEmpty().startsWith("/shorts/") ->
-                                                            originalMedia.pathSegments.getOrNull(1)
-                                                        mediaHost == "youtu.be" -> originalMedia.pathSegments.firstOrNull()
-                                                        else -> null
-                                                    }?.takeIf { it.matches(Regex("[A-Za-z0-9_-]{11}")) }
-                                                    val vkVideo = mediaHost in listOf("vk.com", "www.vk.com", "m.vk.com", "vkvideo.ru", "www.vkvideo.ru") &&
-                                                        originalMedia.path.orEmpty().matches(Regex("/(?:video-?[0-9]+_[0-9]+|clip-?[0-9]+_[0-9]+)/?"))
-                                                    if (youtubeId != null || vkVideo) {
-                                                        addView(button("▶ Смотреть видео") {
-                                                            val embed = if (youtubeId != null) "https://www.youtube-nocookie.com/embed/$youtubeId" else originalMedia.toString()
-                                                            val dialog = android.app.Dialog(this@MainActivity)
-                                                            val web = android.webkit.WebView(this@MainActivity).apply {
-                                                                settings.javaScriptEnabled = true
-                                                                settings.domStorageEnabled = true
-                                                                settings.allowFileAccess = false
-                                                                settings.allowContentAccess = false
-                                                                webViewClient = object : android.webkit.WebViewClient() {
-                                                                    override fun shouldOverrideUrlLoading(view: android.webkit.WebView?, request: android.webkit.WebResourceRequest?): Boolean {
-                                                                        val host = request?.url?.host.orEmpty().lowercase()
-                                                                        return host !in listOf("youtube-nocookie.com", "www.youtube-nocookie.com", "youtube.com", "www.youtube.com", "googlevideo.com", "vk.com", "www.vk.com", "vkvideo.ru", "www.vkvideo.ru")
-                                                                    }
-                                                                }
-                                                                loadUrl(embed)
-                                                            }
-                                                            val frame = LinearLayout(this@MainActivity).apply {
-                                                                orientation = LinearLayout.VERTICAL
-                                                                setBackgroundColor(Color.BLACK)
-                                                                addView(web, LinearLayout.LayoutParams(-1, dp(260)))
-                                                                addView(button("Открыть оригинал") { startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, originalMedia)) })
-                                                                addView(button("Закрыть") { dialog.dismiss() })
-                                                            }
-                                                            dialog.setContentView(frame)
-                                                            dialog.setOnDismissListener { web.stopLoading(); web.destroy() }
-                                                            dialog.show()
-                                                            dialog.window?.setLayout(-1, -2)
-                                                        })
-                                                    } else if (directFile) {
-                                                        addView(button("▶ Смотреть здесь") {
-                                                            val dialog = android.app.Dialog(this@MainActivity)
-                                                            val video = android.widget.VideoView(this@MainActivity)
-                                                            val frame = LinearLayout(this@MainActivity).apply {
-                                                                orientation = LinearLayout.VERTICAL
-                                                                setBackgroundColor(Color.BLACK)
-                                                                addView(video, LinearLayout.LayoutParams(-1, dp(260)))
-                                                                addView(button("Закрыть") { dialog.dismiss() })
-                                                            }
-                                                            dialog.setContentView(frame)
-                                                            dialog.setOnDismissListener { video.stopPlayback() }
-                                                            video.setVideoURI(originalMedia)
-                                                            video.setMediaController(android.widget.MediaController(this@MainActivity).apply { setAnchorView(video) })
-                                                            video.setOnPreparedListener { video.start() }
-                                                            video.setOnErrorListener { _, _, _ ->
-                                                                android.widget.Toast.makeText(this@MainActivity, "Не удалось воспроизвести видео", android.widget.Toast.LENGTH_LONG).show()
-                                                                true
-                                                            }
-                                                            dialog.show()
-                                                            dialog.window?.setLayout(-1, -2)
-                                                        })
-                                                    } else {
-                                                        addView(text("Видео доступно в исходной публикации", 12f, muted))
-                                                    }
+                                                    addView(text("Видео — в исходной публикации", 12f, muted))
                                                 } else if (originalMedia.path.orEmpty().lowercase().endsWith(".gif")) {
                                                     val gifView = android.webkit.WebView(this@MainActivity).apply {
                                                         settings.javaScriptEnabled = false
