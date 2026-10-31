@@ -17,24 +17,16 @@ class MainActivity : Activity() {
     private fun dp(value: Int) = (value * resources.displayMetrics.density + 0.5f).toInt()
     private lateinit var content: LinearLayout
     private lateinit var root: LinearLayout
-    private var city = "Выберите город"
     private var currentPage = "home"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        city = savedInstanceState?.getString("city")
-            ?: getPreferences(MODE_PRIVATE).getString("city", "Выберите город")!!
         showHome()
     }
 
     @Deprecated("Deprecated in Android framework")
     override fun onBackPressed() {
         if (currentPage != "home") showHome() else super.onBackPressed()
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        outState.putString("city", city)
-        super.onSaveInstanceState(outState)
     }
 
     private fun text(label: String, size: Float = 17f, color: Int = Color.WHITE, bold: Boolean = false) =
@@ -235,7 +227,7 @@ class MainActivity : Activity() {
     }.apply { contentDescription = when(key) {
         "⚡" -> "Свет"; "💧" -> "Вода"; "⛽" -> "Топливо"; "▤" -> "Новости"
         "⚕" -> "Аптеки"; "🚕" -> "Такси"; "⌖" -> "Полезные адреса"; "city" -> "Мой город"; "chat" -> "Онлайн-чат"
-        "pin" -> "Выбор города"
+        "pin" -> "Регион ДНР"
         else -> key
     } }
 
@@ -275,7 +267,7 @@ class MainActivity : Activity() {
             Triple("⚡", "Свет", "Отключения"),
             Triple("💧", "Вода", "Водоснабжение"),
             Triple("⛽", "Топливо", "Наличие"),
-            Triple("▤", "Новости", "Городская лента")
+            Triple("▤", "Новости", "Новости ДНР")
         )
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         items.forEach { item ->
@@ -593,141 +585,14 @@ class MainActivity : Activity() {
         })
     }
 
-    private fun chooseCity() {
-        val cities = arrayOf(
-            "Авдеевка",
-            "Амвросиевка",
-            "Артёмовск (Бахмут)",
-            "Белицкое",
-            "Белозёрское",
-            "Волноваха",
-            "Горловка",
-            "Горняк",
-            "Дебальцево",
-            "Дзержинск (Торецк)",
-            "Доброполье",
-            "Докучаевск",
-            "Донецк",
-            "Дружковка",
-            "Енакиево",
-            "Ждановка",
-            "Железное",
-            "Зугрэс",
-            "Иловайск",
-            "Кировское (Крестовка)",
-            "Комсомольское (Кальмиусское)",
-            "Константиновка",
-            "Краматорск",
-            "Красногоровка",
-            "Красноармейск (Покровск)",
-            "Курахово",
-            "Лиман",
-            "Макеевка",
-            "Мариуполь",
-            "Марьинка",
-            "Мирноград",
-            "Моспино",
-            "Николаевка",
-            "Новоазовск",
-            "Новогродовка",
-            "Родинское",
-            "Светлодарск",
-            "Святогорск",
-            "Северск",
-            "Селидово",
-            "Славянск",
-            "Снежное",
-            "Соледар",
-            "Торез (Чистяково)",
-            "Углегорск",
-            "Угледар",
-            "Украинск",
-            "Харцызск",
-            "Часов Яр",
-            "Шахтёрск",
-            "Ясиноватая"
-        )
-        val layout = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setPadding(24, 8, 24, 8)
-        }
-        val search = EditText(this).apply {
-            hint = "Поиск города"
-            isSingleLine = true
-            inputType = android.text.InputType.TYPE_CLASS_TEXT or
-                android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
-        }
-        val results = ListView(this)
-        val visible = cities.toMutableList()
-        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, visible)
-        results.adapter = adapter
-        layout.addView(search)
-        layout.addView(results, LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, (resources.displayMetrics.density * 420).toInt()))
-        val dialog = android.app.AlertDialog.Builder(this)
-            .setTitle("Выберите город")
-            .setView(layout)
-            .setNegativeButton("Отмена", null)
-            .create()
-        results.setOnItemClickListener { _, _, position, _ ->
-            city = visible[position]
-            getPreferences(MODE_PRIVATE).edit().putString("city", city).apply()
-            dialog.dismiss()
-            when (currentPage) {
-                "electricity" -> showElectricity()
-                "water" -> showWater()
-                "fuel" -> showFuel()
-                "news" -> showNews()
-                else -> showHome()
-            }
-        }
-        search.addTextChangedListener(object : android.text.TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                val query = s?.toString()?.trim().orEmpty()
-                visible.clear()
-                visible.addAll(cities.filter { it.contains(query, ignoreCase = true) })
-                adapter.notifyDataSetChanged()
-            }
-            override fun afterTextChanged(s: android.text.Editable?) {}
-        })
-        dialog.show()
-    }
-
     private fun showHome() {
         currentPage = "home"
         shell("")
         content.removeAllViews()
         header()
         promoBanner()
-        val cityRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            background = outlinedPanel()
-            setPadding(dp(14), dp(2), dp(10), dp(2))
-        }
-        val cityIcon = TextView(this).apply {
-            text = ""
-            textSize = 22f
-            gravity = Gravity.CENTER
-            setTextColor(Color.WHITE)
-            setPadding(0, 0, 0, 0)
-            background = android.graphics.drawable.GradientDrawable().apply {
-                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
-                cornerRadius = dp(9).toFloat()
-                setColor(Color.rgb(35, 36, 40))
-                setStroke(dp(1), accent)
-            }
-        }
-        cityRow.addView(iconGraphic("pin", 32), LinearLayout.LayoutParams(dp(38), dp(38)).apply {
-            rightMargin = dp(10)
-        })
-        cityRow.addView(text(city, 16f, Color.WHITE, true), LinearLayout.LayoutParams(0, -2, 1f))
-        cityRow.addView(button("Изменить ▾") { chooseCity() })
-        cityRow.setOnClickListener { chooseCity() }
-        content.addView(cityRow, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
         sosPanel()
-        content.addView(text("Городские разделы", 21f, Color.WHITE, true))
+        content.addView(text("Разделы ДНР", 21f, Color.WHITE, true))
         featureStrip()
         chatPanel()
         content.addView(text("Полезное рядом  →", 21f, Color.WHITE, true).apply {
@@ -806,7 +671,6 @@ class MainActivity : Activity() {
     private fun showPage(title: String, description: String) {
         currentPage = title
         shell(title)
-        content.addView(text("Город: $city", 16f, muted))
         content.addView(text(description, 16f, muted))
         content.addView(button("← На главную") { showHome() })
     }
@@ -849,7 +713,6 @@ class MainActivity : Activity() {
     private fun showElectricity() {
         currentPage = "electricity"
         shell("⚡ Свет")
-        content.addView(text("Город: $city", 17f, Color.WHITE, true))
         run {
             card("Актуальность сведений", "Проверяем опубликованные сообщения. Нет данных — не значит, что отключений нет.")
             val status = text("Загрузка сведений…", 15f, muted)
@@ -859,14 +722,12 @@ class MainActivity : Activity() {
             fun load() {
                 status.text = "Загрузка сведений…"
                 entries.removeAllViews()
-                val selectedCity = city
                 Thread {
                     val outcome = try {
                         // Set the verified HTTPS production API base URL before enabling live data.
-                        val base = getPreferences(MODE_PRIVATE).getString("utility_api_base", "").orEmpty()
+                        val base = getPreferences(MODE_PRIVATE).getString("utility_api_base", "https://dnrsignal.duckdns.org").orEmpty()
                         require(base.startsWith("https://")) { "Источник данных пока не подключён." }
-                        val url = java.net.URL(base.trimEnd('/') + "/api/outages?kind=electricity&city=" +
-                            java.net.URLEncoder.encode(selectedCity, "UTF-8"))
+                        val url = java.net.URL(base.trimEnd('/') + "/api/outages?kind=electricity")
                         val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
                             connectTimeout = 8000
                             readTimeout = 8000
@@ -880,8 +741,7 @@ class MainActivity : Activity() {
                             val accepted = mutableListOf<org.json.JSONObject>()
                             for (i in 0 until rows.length()) {
                                 val item = rows.getJSONObject(i)
-                                if (item.optString("city") == selectedCity &&
-                                    item.optString("kind") == "electricity" &&
+                                if (item.optString("kind") == "electricity" &&
                                     item.optString("verification") == "confirmed" &&
                                     item.optString("source").isNotBlank() &&
                                     item.optString("published_at").isNotBlank()) accepted.add(item)
@@ -890,7 +750,7 @@ class MainActivity : Activity() {
                         } finally { conn.disconnect() }
                     } catch (e: Exception) { e }
                     runOnUiThread {
-                        if (currentPage != "electricity" || city != selectedCity) return@runOnUiThread
+                        if (currentPage != "electricity") return@runOnUiThread
                         when (outcome) {
                             is Exception -> status.text = outcome.message ?: "Не удалось получить сведения."
                             is List<*> -> {
@@ -931,7 +791,6 @@ class MainActivity : Activity() {
     private fun showWater() {
         currentPage = "water"
         shell("💧 Вода")
-        content.addView(text("Город: $city", 17f, Color.WHITE, true))
         run {
             card("Актуальность сведений", "Проверяем опубликованные сообщения. Нет данных — не значит, что отключений нет.")
             val status = text("Загрузка сведений…", 15f, muted)
@@ -941,14 +800,12 @@ class MainActivity : Activity() {
             fun load() {
                 status.text = "Загрузка сведений…"
                 entries.removeAllViews()
-                val selectedCity = city
                 Thread {
                     val outcome = try {
                         // Set the verified HTTPS production API base URL before enabling live data.
-                        val base = getPreferences(MODE_PRIVATE).getString("utility_api_base", "").orEmpty()
+                        val base = getPreferences(MODE_PRIVATE).getString("utility_api_base", "https://dnrsignal.duckdns.org").orEmpty()
                         require(base.startsWith("https://")) { "Источник данных пока не подключён." }
-                        val url = java.net.URL(base.trimEnd('/') + "/api/outages?kind=water&city=" +
-                            java.net.URLEncoder.encode(selectedCity, "UTF-8"))
+                        val url = java.net.URL(base.trimEnd('/') + "/api/outages?kind=water")
                         val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
                             connectTimeout = 8000
                             readTimeout = 8000
@@ -962,8 +819,7 @@ class MainActivity : Activity() {
                             val accepted = mutableListOf<org.json.JSONObject>()
                             for (i in 0 until rows.length()) {
                                 val item = rows.getJSONObject(i)
-                                if (item.optString("city") == selectedCity &&
-                                    item.optString("kind") == "water" &&
+                                if (item.optString("kind") == "water" &&
                                     item.optString("verification") == "confirmed" &&
                                     item.optString("source").isNotBlank() &&
                                     item.optString("published_at").isNotBlank()) accepted.add(item)
@@ -972,7 +828,7 @@ class MainActivity : Activity() {
                         } finally { conn.disconnect() }
                     } catch (e: Exception) { e }
                     runOnUiThread {
-                        if (currentPage != "water" || city != selectedCity) return@runOnUiThread
+                        if (currentPage != "water") return@runOnUiThread
                         when (outcome) {
                             is Exception -> status.text = outcome.message ?: "Не удалось получить сведения."
                             is List<*> -> {
@@ -1012,19 +868,20 @@ class MainActivity : Activity() {
 
     private fun showFuel() {
         currentPage = "fuel"
-        shell("⛽ Топливо")
-        content.addView(text("Общая сводка: Донецк + Макеевка", 17f, Color.WHITE, true))
-        if (city != "Донецк" && city != "Макеевка") {
-            card("Сводка по топливу", "Доступная сводка охватывает Донецк и Макеевку. Выбранный город: $city. При необходимости смените город на главном экране.")
-        } else {
-            card("Статус данных", "Онлайн-источник пока не подключён. Наличие топлива на конкретных АЗС не подтверждено.")
-            listOf("АИ-92", "АИ-95", "Дизель", "Газ").forEach { fuel ->
-                card(fuel, "Нет актуальных подтверждённых сведений")
-            }
-            card("Ограничения и поставки", "Подтверждённых свежих сообщений пока нет. Это не означает, что ограничений нет.")
-            content.addView(text("После подключения источников покажем АЗС, адрес, наличие, цену (если опубликована), время проверки и ссылку на сообщение.", 14f, muted))
-            content.addView(button("Обновить сведения") { showFuel() })
+        shell("⛽ Топливо ДНР")
+        card("Общая сводка по ДНР", "Сведения рассматриваются по региону целиком. Наличие топлива на конкретных АЗС не подтверждено, пока нет свежей публикации с проверяемыми данными.")
+        listOf("АИ-92", "АИ-95", "Дизель", "Газ").forEach { fuel ->
+            card(fuel, "Нет актуальных подтверждённых сведений")
         }
+        card("Ограничения и поставки", "Подтверждённых свежих сообщений пока нет. Это не означает, что ограничений нет.")
+        content.addView(text("Источники для проверки:", 15f, Color.WHITE, true))
+        content.addView(button("Топливо ДНР — основной канал") {
+            startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://t.me/fueldnr")))
+        })
+        content.addView(button("Топливо ДНР — дополнительный канал") {
+            startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://t.me/benz_dnr")))
+        })
+        content.addView(button("Обновить сведения") { showFuel() })
         content.addView(button("← На главную") { showHome() })
     }
 
@@ -1072,9 +929,8 @@ class MainActivity : Activity() {
     private fun showNews() {
         currentPage = "news"
         shell("▤ Новости")
-        content.addView(text("Город: $city", 17f, Color.WHITE, true))
         run {
-            card("Проверенные публикации", "Показываем только сообщения, прошедшие проверку. Пустая лента не означает, что в городе ничего не происходит.")
+            card("Проверенные публикации", "Показываем подтверждённые важные сообщения со всего региона. Пустая лента не означает отсутствие событий.")
             val status = text("Загрузка новостей…", 15f, muted)
             content.addView(status)
             val entries = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
@@ -1082,13 +938,11 @@ class MainActivity : Activity() {
             fun load() {
                 status.text = "Загрузка новостей…"
                 entries.removeAllViews()
-                val selectedCity = city
                 Thread {
                     val outcome = try {
-                        val base = getPreferences(MODE_PRIVATE).getString("utility_api_base", "").orEmpty()
+                        val base = getPreferences(MODE_PRIVATE).getString("utility_api_base", "https://dnrsignal.duckdns.org").orEmpty()
                         require(base.startsWith("https://")) { "Источник новостей пока не подключён." }
-                        val url = java.net.URL(base.trimEnd('/') + "/api/news?city=" +
-                            java.net.URLEncoder.encode(selectedCity, "UTF-8") + "&limit=20")
+                        val url = java.net.URL(base.trimEnd('/') + "/api/news?limit=20")
                         val conn = (url.openConnection() as java.net.HttpURLConnection).apply {
                             connectTimeout = 8000
                             readTimeout = 8000
@@ -1108,8 +962,7 @@ class MainActivity : Activity() {
                                     parsedSource.userInfo == null &&
                                     (sourceHost == "t.me" || sourceHost == "max.ru") &&
                                     parsedSource.path.orEmpty().length > 1
-                                if (item.optString("city") == selectedCity &&
-                                    item.optString("verification") == "confirmed" &&
+                                if (item.optString("verification") == "confirmed" &&
                                     trustedSource &&
                                     item.optString("title").isNotBlank() &&
                                     item.optString("published_at").isNotBlank()) accepted.add(item)
@@ -1118,7 +971,7 @@ class MainActivity : Activity() {
                         } finally { conn.disconnect() }
                     } catch (e: Exception) { e }
                     runOnUiThread {
-                        if (currentPage != "news" || city != selectedCity) return@runOnUiThread
+                        if (currentPage != "news") return@runOnUiThread
                         when (outcome) {
                             is Exception -> status.text = outcome.message ?: "Не удалось получить новости."
                             is List<*> -> {
@@ -1264,113 +1117,59 @@ class MainActivity : Activity() {
 
     private fun showOfficialChannels() {
         currentPage = "channels"
-        shell("Официальные каналы")
-        content.addView(text("Город: $city", 17f, Color.WHITE, true))
-        content.addView(text("Ссылки ведут на опубликованные каналы администраций и руководителей. Открытие происходит в Telegram или MAX. Наличие ссылки не означает автоматическую загрузку публикаций в приложение.", 14f, muted))
+        shell("Официальные источники ДНР")
+        content.addView(text("Общий список источников по региону. Ссылки открывают исходные каналы; наличие ссылки не означает, что каждая публикация автоматически попадает в ленту.", 14f, muted))
 
         data class OfficialLink(val organization: String, val telegram: String? = null, val max: String? = null)
-        val links = when (city) {
-            "Донецк" -> listOf(
-                OfficialLink("Администрация города", "https://t.me/gorodDonetsk"),
-                OfficialLink("Глава города", "https://t.me/kulemzin_donetsk", "https://max.ru/kulemzin_donetsk")
-            )
-            "Макеевка" -> listOf(OfficialLink("Администрация города", "https://t.me/Novosti_Makeevka", "https://max.ru/makeevka_ru"))
-            "Дебальцево" -> listOf(
-                OfficialLink("Администрация города", "https://t.me/admDebaltsevo"),
-                OfficialLink("Глава города", "https://t.me/glavadebaltsevo")
-            )
-            "Докучаевск" -> listOf(
-                OfficialLink("Администрация города", "https://t.me/Dokuchaevsk_admin", "https://max.ru/id9306004432_gos"),
-                OfficialLink("Глава города", "https://t.me/dokuchaevsk", "https://max.ru/id9306004432_gos2")
-            )
-            "Горловка" -> listOf(OfficialLink("Администрация города", "https://t.me/Gorlowka_now", "https://max.ru/gorlowka_now"))
-            "Енакиево" -> listOf(
-                OfficialLink("Администрация города", "https://t.me/Enakievo_official", "https://max.ru/enakievo_official"),
-                OfficialLink("Глава города", "https://t.me/IgorMartynov_enk")
-            )
-            "Иловайск" -> listOf(
-                OfficialLink("Администрация городского округа", "https://t.me/ilovaisk_onlain", "https://max.ru/id9304022980_gos"),
-                OfficialLink("Руководитель городского округа", "https://t.me/dz_ilov_gorokrug")
-            )
-            "Мариуполь" -> listOf(
-                OfficialLink("Администрация города", "https://t.me/nmrpl"),
-                OfficialLink("Глава города", "https://t.me/morgun_ov")
-            )
-            "Снежное" -> listOf(
-                OfficialLink("Администрация города", "https://t.me/Snijne", "https://max.ru/id9304022972_gos"),
-                OfficialLink("Глава города", "https://t.me/Ermakov_ESV")
-            )
-            "Торез (Чистяково)" -> listOf(OfficialLink("Администрация города", "https://t.me/torez_admin", "https://max.ru/id9304022958_gos"))
-            "Харцызск" -> listOf(OfficialLink("Администрация города", "https://t.me/khartsyzsk_press_office"))
-            "Амвросиевка" -> listOf(
-                OfficialLink("Администрация округа", "https://t.me/amvr_admin", "https://max.ru/id9304022919_gos"),
-                OfficialLink("Глава администрации", "https://t.me/Lyzov_amvrosievka", "https://max.ru/join/HIkfVJh2KB7pFxakfgjwwaGirL1L-t9kZISWlNE96XE")
-            )
-            "Волноваха" -> listOf(
-                OfficialLink("Администрация округа", "https://t.me/volnovahadnr", "https://max.ru/id9306004440_gos"),
-                OfficialLink("Глава администрации", "https://t.me/kazinchenko", "https://max.ru/id9306004440_gos2")
-            )
-            "Шахтёрск" -> listOf(
-                OfficialLink("Администрация округа", "https://t.me/AGShahtersk", "https://max.ru/mo_shahtersk"),
-                OfficialLink("Глава администрации", "https://t.me/shatov_av_agsh")
-            )
-            "Новоазовск" -> listOf(
-                OfficialLink("Администрация округа", "https://t.me/novoazovsk_adm", "https://max.ru/id9305011204_gos"),
-                OfficialLink("Канал руководителя округа", "https://t.me/novoazovskiy_region")
-            )
-            "Тельманово" -> listOf(OfficialLink("Администрация округа", "https://t.me/adm_telmanovskogo_rajona", "https://max.ru/id9305011162_gos"))
-            "Старобешево" -> listOf(OfficialLink("Администрация округа", "https://t.me/starobeshevo1923"))
-            "Володарское" -> listOf(OfficialLink("Администрация округа", "https://t.me/volodinfo"))
-            "Мангуш" -> listOf(OfficialLink("Администрация округа", "https://t.me/Mangush_mo"))
-            "Ждановка" -> listOf(OfficialLink("Администрация города", "https://t.me/adm_zhdanovka"))
-            "Кировское (Крестовка)" -> listOf(OfficialLink("Администрация города", "https://t.me/gorod_kirovskoe"))
-            "Ясиноватая" -> listOf(OfficialLink("Администрация округа", "https://t.me/gromko_yas"))
-            "Красный Лиман" -> listOf(OfficialLink("Администрация округа", "https://t.me/kr_liman_admin"))
-            else -> emptyList()
-        }
-
-        if (links.isEmpty()) {
-            card("Проверенные ссылки пока не добавлены", "Для выбранного населённого пункта мы ещё не подтвердили официальные каналы. Не подставляем случайные ссылки.")
-        } else {
-            links.forEach { link ->
-                val panel = LinearLayout(this).apply {
-                    orientation = LinearLayout.VERTICAL
-                    setPadding(dp(14), dp(8), dp(14), dp(10))
-                    background = outlinedPanel()
-                }
-                panel.addView(text(link.organization, 16f, Color.WHITE, true))
-                val actions = LinearLayout(this).apply {
-                    orientation = LinearLayout.HORIZONTAL
-                    gravity = Gravity.CENTER_VERTICAL
-                }
-                link.telegram?.let { url ->
-                    actions.addView(button("Открыть Telegram") {
-                        startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)))
-                    }, LinearLayout.LayoutParams(0, -2, 1f).apply { rightMargin = dp(6) })
-                }
-                link.max?.let { url ->
-                    actions.addView(button("Открыть MAX") {
-                        startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)))
-                    }, LinearLayout.LayoutParams(0, -2, 1f))
-                }
-                panel.addView(actions, LinearLayout.LayoutParams(-1, -2))
-                if (link.max == null) panel.addView(text("Подтверждённая ссылка MAX пока не добавлена.", 12f, muted))
-                content.addView(panel, LinearLayout.LayoutParams(-1, -2).apply {
-                    topMargin = dp(6)
-                    bottomMargin = dp(4)
-                })
+        val links = listOf(
+            OfficialLink("РИА Новости", "https://t.me/rian_ru"),
+            OfficialLink("Администрация Донецка", "https://t.me/gorodDonetsk"),
+            OfficialLink("Глава Донецка", "https://t.me/kulemzin_donetsk", "https://max.ru/kulemzin_donetsk"),
+            OfficialLink("Новости Макеевки", "https://t.me/Novosti_Makeevka", "https://max.ru/makeevka_ru"),
+            OfficialLink("Администрация Горловки", "https://t.me/Gorlowka_now", "https://max.ru/gorlowka_now"),
+            OfficialLink("Старобешевский округ", "https://t.me/starobeshevo1923", "https://max.ru/id9305011170_gos"),
+            OfficialLink("Топливо ДНР", "https://t.me/fueldnr"),
+            OfficialLink("Топливо ДНР — дополнительный источник", "https://t.me/benz_dnr"),
+            OfficialLink("Вода Донбасса", "https://t.me/vodavdnr", "https://max.ru/vodadonbassa"),
+            OfficialLink("Министерство строительства ДНР", "https://t.me/minstroydnr", "https://max.ru/minstroydnr"),
+            OfficialLink("Графики электроснабжения", null, "https://max.ru/id6163089292_biz")
+        )
+        links.forEach { link ->
+            val panel = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(14), dp(8), dp(14), dp(10))
+                background = outlinedPanel()
             }
+            panel.addView(text(link.organization, 16f, Color.WHITE, true))
+            val actions = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+            link.telegram?.let { url ->
+                actions.addView(button("Открыть Telegram") {
+                    startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)))
+                }, LinearLayout.LayoutParams(0, -2, 1f).apply { rightMargin = dp(6) })
+            }
+            link.max?.let { url ->
+                actions.addView(button("Открыть MAX") {
+                    startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)))
+                }, LinearLayout.LayoutParams(0, -2, 1f))
+            }
+            panel.addView(actions, LinearLayout.LayoutParams(-1, -2))
+            content.addView(panel, LinearLayout.LayoutParams(-1, -2).apply {
+                topMargin = dp(6)
+                bottomMargin = dp(4)
+            })
         }
         content.addView(button("← На главную") { showHome() })
     }
 
     private fun showCommunityChat() {
         currentPage = "chat"
-        if (city == "Выберите город") { chooseCity(); return }
         shell("Онлайн-чат")
         run {
-            content.addView(text("Общий чат: $city", 21f, Color.WHITE, true))
-            content.addView(text("Здесь жители выбранного города смогут общаться друг с другом.", 16f, muted))
+            content.addView(text("Общий чат жителей ДНР", 21f, Color.WHITE, true))
+            content.addView(text("Общение жителей со всего региона.", 16f, muted))
             card("Правила и модерация", "Автоматический фильтр спама, жалобы на сообщения и проверка модератором. Нарушения могут приводить к ограничению доступа.")
             content.addView(text("Отправка сообщений станет доступна после подключения сервера и авторизации. Сейчас сообщения не отправляются.", 15f, muted))
         }
