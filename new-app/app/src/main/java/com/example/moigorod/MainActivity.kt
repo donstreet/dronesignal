@@ -17,13 +17,14 @@ class MainActivity : Activity() {
     private fun dp(value: Int) = (value * resources.displayMetrics.density + 0.5f).toInt()
     private lateinit var content: LinearLayout
     private lateinit var root: LinearLayout
-    private var city = "Выберите город"
+    private var city = "Все города"
     private var currentPage = "home"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         city = savedInstanceState?.getString("city")
-            ?: getPreferences(MODE_PRIVATE).getString("city", "Выберите город")!!
+            ?: getPreferences(MODE_PRIVATE).getString("city", "Все города")!!
+        if (city == "Выберите город") city = "Все города"
         showHome()
     }
 
@@ -704,32 +705,7 @@ class MainActivity : Activity() {
         content.removeAllViews()
         header()
         promoBanner()
-        val cityRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            background = outlinedPanel()
-            setPadding(dp(14), dp(2), dp(10), dp(2))
-        }
-        val cityIcon = TextView(this).apply {
-            text = ""
-            textSize = 22f
-            gravity = Gravity.CENTER
-            setTextColor(Color.WHITE)
-            setPadding(0, 0, 0, 0)
-            background = android.graphics.drawable.GradientDrawable().apply {
-                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
-                cornerRadius = dp(9).toFloat()
-                setColor(Color.rgb(35, 36, 40))
-                setStroke(dp(1), accent)
-            }
-        }
-        cityRow.addView(iconGraphic("pin", 32), LinearLayout.LayoutParams(dp(38), dp(38)).apply {
-            rightMargin = dp(10)
-        })
-        cityRow.addView(text(city, 16f, Color.WHITE, true), LinearLayout.LayoutParams(0, -2, 1f))
-        cityRow.addView(button("Изменить ▾") { chooseCity() })
-        cityRow.setOnClickListener { chooseCity() }
-        content.addView(cityRow, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(10) })
+        // Город не выбирается вручную: общие городские разделы доступны сразу.
         sosPanel()
         content.addView(text("Городские разделы", 21f, Color.WHITE, true))
         featureStrip()
@@ -764,7 +740,6 @@ class MainActivity : Activity() {
     private fun showPage(title: String, description: String) {
         currentPage = title
         shell(title)
-        content.addView(text("Город: $city", 16f, muted))
         content.addView(text(description, 16f, muted))
         content.addView(button("← На главную") { showHome() })
     }
@@ -1338,19 +1313,13 @@ class MainActivity : Activity() {
         currentPage = "fuel"
         shell("⛽ Топливо")
         content.addView(text("Общая сводка: Донецк + Макеевка", 17f, Color.WHITE, true))
-        if (city != "Донецк" && city != "Макеевка") {
-            card("Выбран город: $city", "Сводка пока охватывает только Донецк и Макеевку. Выберите один из них.")
-            content.addView(button("Выбрать город") { chooseCity() })
-        } else {
-            card("Статус данных", "Онлайн-источник пока не подключён. Наличие топлива на конкретных АЗС не подтверждено.")
-            listOf("АИ-92", "АИ-95", "Дизель", "Газ").forEach { fuel ->
-                card(fuel, "Нет актуальных подтверждённых сведений")
-            }
-            card("Ограничения и поставки", "Подтверждённых свежих сообщений пока нет. Это не означает, что ограничений нет.")
-            content.addView(text("После подключения источников покажем АЗС, адрес, наличие, цену (если опубликована), время проверки и ссылку на сообщение.", 14f, muted))
-            content.addView(button("Обновить сведения") { showFuel() })
-            content.addView(button("Изменить город") { chooseCity() })
+        card("Статус данных", "Онлайн-источник пока не подключён. Наличие топлива на конкретных АЗС не подтверждено.")
+        listOf("АИ-92", "АИ-95", "Дизель", "Газ").forEach { fuel ->
+            card(fuel, "Нет актуальных подтверждённых сведений")
         }
+        card("Ограничения и поставки", "Подтверждённых свежих сообщений пока нет. Это не означает, что ограничений нет.")
+        content.addView(text("После подключения источников покажем АЗС, адрес, наличие, цену (если опубликована), время проверки и ссылку на сообщение.", 14f, muted))
+        content.addView(button("Обновить сведения") { showFuel() })
         content.addView(button("← На главную") { showHome() })
     }
 
@@ -1398,12 +1367,7 @@ class MainActivity : Activity() {
     private fun showNews() {
         currentPage = "news"
         shell("▤ Новости")
-        content.addView(text("Город: $city", 17f, Color.WHITE, true))
-        if (city == "Выберите город") {
-            card("Сначала выберите город", "Лента новостей привязана к выбранному населённому пункту.")
-            content.addView(button("Выбрать город") { chooseCity() })
-        } else {
-            val status = text("Загрузка новостей…", 15f, muted)
+        val status = text("Загрузка новостей…", 15f, muted)
             content.addView(status)
             val entries = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
             content.addView(entries)
@@ -1437,7 +1401,7 @@ class MainActivity : Activity() {
                                     parsedSource.userInfo == null &&
                                     (sourceHost == "t.me" || sourceHost == "max.ru" || sourceHost == "vesti.ru" || sourceHost?.endsWith(".vesti.ru") == true) &&
                                     parsedSource.path.orEmpty().length > 1
-                                if ((item.optString("city") == selectedCity || item.optString("city") == "Все города") &&
+                                if ((item.optString("city") == selectedCity || item.optString("city") == "Все города" || selectedCity == "Все города") &&
                                     item.optString("verification") == "confirmed" &&
                                     trustedSource &&
                                     item.optString("title").isNotBlank() &&
@@ -1573,7 +1537,6 @@ class MainActivity : Activity() {
                 rightMargin = dp(20)
                 bottomMargin = dp(8)
             })
-        }
         content.addView(button("← На главную") { showHome() })
     }
 
@@ -1785,15 +1748,10 @@ class MainActivity : Activity() {
     private fun showCommunityChat() {
         currentPage = "chat"
         shell("Онлайн-чат")
-        if (city == "Выберите город") {
-            content.addView(text("Для входа в городской чат сначала выберите город.", 16f, muted))
-            content.addView(button("Выбрать город") { chooseCity() })
-        } else {
-            content.addView(text("Общий чат: $city", 21f, Color.WHITE, true))
-            content.addView(text("Здесь жители выбранного города смогут общаться друг с другом.", 16f, muted))
-            card("Правила и модерация", "Автоматический фильтр спама, жалобы на сообщения и проверка модератором. Нарушения могут приводить к ограничению доступа.")
-            content.addView(text("Отправка сообщений станет доступна после подключения сервера и авторизации. Сейчас сообщения не отправляются.", 15f, muted))
-        }
+        content.addView(text("Общий чат жителей", 21f, Color.WHITE, true))
+        content.addView(text("Общение жителей разных городов ДНР.", 16f, muted))
+        card("Правила и модерация", "Автоматический фильтр спама, жалобы на сообщения и проверка модератором. Нарушения могут приводить к ограничению доступа.")
+        content.addView(text("Отправка сообщений станет доступна после подключения сервера и авторизации. Сейчас сообщения не отправляются.", 15f, muted))
         content.addView(button("← На главную") { showHome() })
     }
 
