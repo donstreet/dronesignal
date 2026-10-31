@@ -1076,12 +1076,14 @@ class MainActivity : Activity() {
             }
         }
         var cached = emptyList<org.json.JSONObject>()
-        val filters = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }\n        val filterScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
+        val filters = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        val filterScroll = HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false }
         listOf("all" to "Все", "active" to "Отключения", "restored" to "Восстановлено",
             "planned" to "Плановые работы", "news" to "Новости ЖКХ").forEach { (key, label) ->
             filters.addView(button(label) { filter = key; render(cached) }, LinearLayout.LayoutParams(-2, dp(44)).apply { rightMargin = dp(6) })
         }
-        filterScroll.addView(filters)\n        content.addView(filterScroll)
+        filterScroll.addView(filters)
+        content.addView(filterScroll)
         fun load() {
             Thread {
                 val outcome = try {
