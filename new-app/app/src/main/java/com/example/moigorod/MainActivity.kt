@@ -596,7 +596,7 @@ class MainActivity : Activity() {
         content.addView(button("← На главную") { showHome() })
     }
 
-    private fun chooseCity() {
+    private fun chooseCity(onSelected: (() -> Unit)? = null) {
         val cities = arrayOf(
             "Авдеевка",
             "Амвросиевка",
@@ -676,6 +676,7 @@ class MainActivity : Activity() {
             city = visible[position]
             getPreferences(MODE_PRIVATE).edit().putString("city", city).apply()
             dialog.dismiss()
+            if (onSelected != null) { onSelected(); return@setOnItemClickListener }
             when (currentPage) {
                 "electricity" -> showElectricity()
                 "water" -> showWater()
@@ -905,10 +906,12 @@ class MainActivity : Activity() {
         val phone = accountField("Телефон: +79991234567", android.text.InputType.TYPE_CLASS_PHONE)
         val name = accountField("Ваше имя", android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES)
         content.addView(login); content.addView(pass); content.addView(phone); content.addView(name)
-        content.addView(text("Город: " + city, 15f, muted))
+        val selectedCity = text("Город: " + city, 15f, muted)
+        content.addView(selectedCity)
+        content.addView(button("Выбрать город") { chooseCity { selectedCity.text = "Город: " + city } })
         val feedback = text("", 14f, muted)
         content.addView(button("Зарегистрироваться") {
-            if (pass.text.length < 6 || city == "Выберите город" || name.text.isBlank()) {
+            if (pass.text.length < 6 || city == "Выберите город" || name.text.toString().isBlank()) {
                 feedback.text = "Укажите имя, город и пароль не короче 6 символов"
             } else {
                 val payload = org.json.JSONObject().put("username", login.text.toString().trim())
@@ -923,7 +926,7 @@ class MainActivity : Activity() {
                         409 -> "Логин или телефон уже используется"
                         422 -> "Проверьте логин и телефон в международном формате"
                         429 -> "Слишком много попыток. Попробуйте позже"
-                        else -> "Ошибка регистрации (код " + code + ")"
+                        else -> "Ошибка регистрации (код " + code + "): " + json.optString("detail", "проверьте соединение")
                     }
                 }
             }
